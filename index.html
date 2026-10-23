@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Rahul Kaura, Forward Deployed Engineer. Production AI systems, technical reports and open-source field tools.">
+<title>Rahul Kaura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500;62..125,700;62..125,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a field engineer's operating record. Separate views (overview, deployments, research, builds, profile) instead of one long scroll; condensed wide-set display type, deployment briefs, a clickable system map, and papers set in a serif reader. */
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --sunk:#E8ECF1; --ink:#0D1624; --muted:#56637A; --line:#D5DBE3;
+  --accent:#1B4BD1; --accent-soft:#E3EAFB; --live:#13804B; --live-soft:#DDF2E6; --warn:#A35C00;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B111B; --surface:#121A27; --sunk:#0F1622; --ink:#E7ECF3; --muted:#93A0B5; --line:#243146;
+  --accent:#7DA2FF; --accent-soft:#18264A; --live:#4CC98A; --live-soft:#123326; --warn:#F0A64A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B111B; --surface:#121A27; --sunk:#0F1622; --ink:#E7ECF3; --muted:#93A0B5; --line:#243146;
+  --accent:#7DA2FF; --accent-soft:#18264A; --live:#4CC98A; --live-soft:#123326; --warn:#F0A64A; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* nav */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.mark{font:800 15px/1 var(--display);font-stretch:118%;letter-spacing:.02em;text-decoration:none;text-transform:uppercase;white-space:nowrap;background:none;border:0;padding:0;cursor:pointer}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-decoration:none;padding:9px 11px;border-radius:6px;white-space:nowrap;border:1px solid transparent}
+.tab:hover{color:var(--ink)}
+.tab[aria-current="page"]{color:var(--ink);background:var(--surface);border-color:var(--line)}
+@media (max-width:700px){nav .wrap{flex-direction:column;align-items:stretch;gap:8px;padding-block:10px}.tabs{margin-inline:-4px}}
+
+/* shared */
+.view{padding-block:0 24px}
+.eyebrow{font:500 12px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}
+h2{font:800 clamp(32px,5vw,52px)/1 var(--display);font-stretch:72%;text-transform:uppercase;margin:6px 0 0;text-wrap:balance}
+.block{padding-block:56px;border-top:1px solid var(--line)}
+.block:first-child{border-top:0}
+@media (max-width:640px){.block{padding-block:40px}}
+.sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:28px}
+.sechead p{margin:0;max-width:32em;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 11.5px/1 var(--mono);padding:6px 8px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:6px;font:600 14px/1 var(--body);text-decoration:none;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:hover{border-color:var(--accent)}
+.textlink{font:500 13px/1 var(--mono);color:var(--accent);text-decoration:none;letter-spacing:.02em}
+.textlink:hover{text-decoration:underline}
+.meta{font:400 12.5px/1.6 var(--mono);color:var(--muted);margin:0}
+
+/* hero */
+.hero{padding-block:64px 48px;display:grid;grid-template-columns:1.35fr 1fr;gap:48px;align-items:end}
+@media (max-width:860px){.hero{grid-template-columns:1fr;padding-block:40px 32px;gap:28px}}
+h1{font:800 clamp(52px,9vw,112px)/.9 var(--display);font-stretch:68%;letter-spacing:-.01em;text-transform:uppercase;margin:16px 0 22px;text-wrap:balance}
+h1 span{display:block;font-stretch:125%;font-size:.42em;letter-spacing:.01em;color:var(--accent);margin-top:.35em}
+.lede{font-size:clamp(17px,2vw,19px);max-width:34em;margin:0}
+.lede em{font-style:normal;color:var(--muted)}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.manifest{background:var(--surface);border:1px solid var(--line);border-radius:10px;font:400 13px/1.5 var(--mono);overflow:hidden;min-width:0}
+.manifest header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);color:var(--muted);font-size:12px}
+.status{display:inline-flex;align-items:center;gap:7px;color:var(--live);background:var(--live-soft);padding:4px 9px;border-radius:99px;font-weight:500}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--live) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.manifest dl{margin:0;padding:8px 16px 14px;display:grid;grid-template-columns:auto 1fr;gap:9px 18px}
+.manifest dt{color:var(--muted)}
+.manifest dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.manifest dd b{font-weight:500;color:var(--accent)}
+
+/* signal strip */
+.signals{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+@media (max-width:800px){.signals{grid-template-columns:repeat(2,1fr)}}
+.signal{padding:18px 20px;border-right:1px solid var(--line);min-width:0}
+.signal:last-child{border-right:0}
+@media (max-width:800px){.signal:nth-child(2n){border-right:0}.signal:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+.signal b{display:block;font:800 30px/1 var(--display);font-stretch:80%;font-variant-numeric:tabular-nums}
+.signal span{display:block;margin-top:8px;font-size:13.5px;color:var(--muted);line-height:1.4}
+
+/* system map */
+.map{display:grid;grid-template-columns:1fr 340px;gap:20px}
+@media (max-width:960px){.map{grid-template-columns:1fr}}
+.board{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;min-width:0;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:18px 18px}
+.lane-label{font:500 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px}
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:22px}
+@media (max-width:700px){.flow{grid-template-columns:1fr 1fr}}
+.rails{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.rails{grid-template-columns:1fr}}
+.node{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;cursor:pointer;min-width:0;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s}
+.node:hover{border-color:var(--accent);transform:translateY(-1px)}
+.node[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.node .k{font:500 10.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.node .t{font:700 15px/1.2 var(--display)}
+.node .mine{font:500 10.5px/1 var(--mono);color:var(--live);display:inline-flex;align-items:center;gap:5px}
+.node .mine::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--live)}
+.node.rail{flex-direction:row;align-items:center;justify-content:space-between;gap:10px;border-style:dashed}
+.flow .node:not(:last-child)::after{content:"→";position:absolute;right:-10px;top:50%;transform:translate(50%,-50%);font:500 13px var(--mono);color:var(--muted);z-index:1}
+@media (max-width:700px){.flow .node::after{display:none}}
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.detail h3{font:700 22px/1.15 var(--display);margin:0}
+.detail p{margin:0;font-size:15px}
+.detail ul{margin:0;padding-left:18px;font-size:15px;display:grid;gap:6px}
+.detail .who{font:500 12px/1.4 var(--mono);color:var(--muted)}
+.detail .links{display:flex;gap:16px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+
+/* paper cards */
+.papers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:960px){.papers{grid-template-columns:1fr}}
+.paper{display:flex;flex-direction:column;gap:12px;text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;min-width:0}
+.paper:hover{border-color:var(--accent)}
+.paper .meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.paper h3{font:600 21px/1.25 var(--serif);margin:0;text-wrap:balance}
+.paper p{margin:0;color:var(--muted);font-size:14.5px}
+.paper .read{margin-top:auto;font:500 12px/1 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+
+/* method */
+.method{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+@media (max-width:860px){.method{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.method{grid-template-columns:1fr}}
+.step{padding:22px 20px 24px;border-right:1px solid var(--line);min-width:0}
+.step:last-child{border-right:0}
+@media (max-width:860px){.step{border-bottom:1px solid var(--line)}.step:nth-child(2n){border-right:0}}
+@media (max-width:520px){.step{border-right:0}}
+.step .n{font:500 12px/1 var(--mono);color:var(--accent);letter-spacing:.08em}
+.step h3{font:700 19px/1.2 var(--display);margin:12px 0 8px}
+.step p{margin:0;color:var(--muted);font-size:15px}
+
+/* deployments */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.filter{font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:9px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--muted)}
+.filter[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.deploys{display:grid;gap:20px}
+.deploy{display:grid;grid-template-columns:270px 1fr;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+@media (max-width:860px){.deploy{grid-template-columns:1fr}}
+.deploy aside{padding:24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:14px;min-width:0;background:var(--sunk)}
+@media (max-width:860px){.deploy aside{border-right:0;border-bottom:1px solid var(--line)}}
+.client{font:500 12px/1.4 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--accent)}
+.deploy h3{font:700 clamp(22px,2.6vw,27px)/1.12 var(--display);font-stretch:96%;margin:0;text-wrap:balance}
+.deploy aside .chips{margin-top:auto}
+.brief{padding:24px 28px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;min-width:0}
+@media (max-width:1000px){.brief{grid-template-columns:1fr;gap:18px}}
+.brief h4{font:500 11.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.brief p{margin:0;font-size:15px;min-width:0}
+.brief .result p{font-weight:500}
+.brief .foot{grid-column:1/-1;display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;padding-top:4px}
+
+/* builds */
+.builds{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.builds{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.builds{grid-template-columns:1fr}}
+.build{border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--surface);display:flex;flex-direction:column;gap:10px;min-width:0}
+.build h3{font:700 19px/1.2 var(--display);margin:0}
+.build p{margin:0;color:var(--muted);font-size:15px}
+.build .chips{margin-top:auto;padding-top:6px}
+
+/* profile */
+.timeline{border-top:1px solid var(--line)}
+.role{display:grid;grid-template-columns:200px 1fr;gap:24px;padding-block:22px;border-bottom:1px solid var(--line)}
+@media (max-width:700px){.role{grid-template-columns:1fr;gap:6px}}
+.when{font:400 13px/1.6 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.role h3{font:700 20px/1.25 var(--display);margin:0}
+.role h3 small{font:400 15px var(--body);color:var(--muted)}
+.role p{margin:6px 0 0;max-width:62ch;color:var(--muted);font-size:15px}
+.stack{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:860px){.stack{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.stack{grid-template-columns:1fr}}
+.layer{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.layer h3{font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin:0 0 12px}
+.layer p{margin:0;font-size:15px}
+.edu{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px}
+@media (max-width:800px){.edu{grid-template-columns:1fr}}
+.edu h3{font:700 22px/1.2 var(--display);margin:0 0 8px}
+.edu p{margin:0;color:var(--muted);font-size:15px}
+.courses{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+.course{font:400 13px/1 var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:5px;background:var(--bg)}
+.posts{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media (max-width:700px){.posts{grid-template-columns:1fr}}
+.post{display:block;text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--surface)}
+.post:hover{border-color:var(--accent)}
+.post h3{font:600 19px/1.3 var(--serif);margin:8px 0}
+.post p{margin:0;color:var(--muted);font-size:15px}
+
+/* reader */
+.reader{display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px;padding-block:40px 24px}
+@media (max-width:900px){.reader{grid-template-columns:1fr;gap:24px;padding-block:28px 16px}}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 80px);align-self:start;display:flex;flex-direction:column;gap:14px;font-size:14px}
+@media (max-width:900px){.toc{position:static}}
+.toc ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted)}
+.toc a{text-decoration:none}
+.toc a:hover{color:var(--accent)}
+@media (max-width:900px){.toc ol{display:none}}
+article.doc{max-width:700px;min-width:0}
+.doc .kind{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.badge{font:500 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;padding:6px 8px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.doc h1{font:600 clamp(30px,4.4vw,44px)/1.12 var(--serif);text-transform:none;letter-spacing:-.01em;margin:18px 0 14px;font-stretch:normal}
+.doc .byline{font:400 14px/1.5 var(--body);color:var(--muted);margin:0 0 28px}
+.doc .abstract{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:32px}
+.doc .abstract h2{font:500 11.5px/1 var(--mono);letter-spacing:.12em;color:var(--accent);margin:0 0 10px;text-transform:uppercase}
+.doc .abstract p{font:400 16.5px/1.6 var(--serif);margin:0}
+.doc h2{font:600 24px/1.25 var(--serif);text-transform:none;margin:40px 0 12px;scroll-margin-top:90px}
+.doc h3{font:600 18px/1.3 var(--serif);margin:26px 0 8px}
+.doc p,.doc li{font:400 17.5px/1.7 var(--serif)}
+.doc p{margin:0 0 16px}
+.doc ul,.doc ol{margin:0 0 16px;padding-left:22px}
+.doc li{margin-bottom:6px}
+.doc code{font:400 .85em var(--mono);background:var(--sunk);padding:2px 5px;border-radius:4px}
+.doc .note{font:400 14.5px/1.6 var(--body);color:var(--muted);border-left:3px solid var(--line);padding:4px 0 4px 14px;margin:0 0 20px}
+figure{margin:28px 0;padding:18px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.figscroll{overflow-x:auto}
+figure svg{display:block;width:100%;min-width:560px;height:auto}
+figcaption{font:400 13.5px/1.5 var(--body);color:var(--muted);margin-top:12px}
+figure svg .box{fill:var(--bg);stroke:var(--line);stroke-width:1.5}
+figure svg .hl{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+figure svg .lbl{fill:var(--ink);font:600 13px var(--body)}
+figure svg .sub{fill:var(--muted);font:400 10.5px var(--mono)}
+figure svg .arr{stroke:var(--muted);stroke-width:1.5;fill:none}
+figure svg .ah{fill:var(--muted)}
+figure svg .dash{stroke:var(--accent);stroke-width:1.5;fill:none;stroke-dasharray:5 4}
+table.t{width:100%;border-collapse:collapse;font:400 14.5px/1.45 var(--body);margin:8px 0 22px}
+.tscroll{overflow-x:auto}
+table.t th{font:500 11.5px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:8px 10px 8px 0}
+table.t td{border-bottom:1px solid var(--line);padding:10px 10px 10px 0;vertical-align:top}
+.refs li{font:400 14.5px/1.55 var(--body);color:var(--muted)}
+.doc pre{font:400 13px/1.6 var(--mono);background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0 0 20px;white-space:pre}
+.doc .eq{font:400 17px/1.6 var(--serif);text-align:center;margin:4px 0 20px;overflow-x:auto;padding:10px 0;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.cite{color:var(--accent);text-decoration:none;font-size:.82em;vertical-align:.1em;white-space:nowrap}
+.cite:hover{text-decoration:underline}
+.refs a{color:var(--accent);font-family:var(--mono);font-size:.92em;white-space:nowrap}
+.refs li{scroll-margin-top:90px}
+
+.next{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:40px;padding-top:20px}
+
+/* contact */
+.contact{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:start}
+@media (max-width:800px){.contact{grid-template-columns:1fr;gap:24px}}
+.lines{display:grid;gap:10px}
+.line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font:400 14px/1.3 var(--mono);text-decoration:none;min-width:0}
+.line span{min-width:0;overflow-wrap:anywhere;user-select:all}
+.line small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
+button.copy{font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px;border-radius:5px;border:1px solid var(--line);background:var(--bg);cursor:pointer;flex-shrink:0}
+button.copy:hover{border-color:var(--accent)}
+footer{border-top:1px solid var(--line);padding-block:28px;font:400 12px/1.5 var(--mono);color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (prefers-reduced-motion:reduce){.dot{animation:none}.node{transition:none}}
+</style>
+</head>
+<body>
+
+<nav aria-label="Primary">
+  <div class="wrap">
+    <a class="mark" href="#overview" data-go="overview">Rahul Kaura</a>
+    <div class="tabs" role="list">
+      <a class="tab" href="#overview" data-go="overview" role="listitem">Overview</a>
+      <a class="tab" href="#deployments" data-go="deployments" role="listitem">Deployments</a>
+      <a class="tab" href="#research" data-go="research" role="listitem">Research</a>
+      <a class="tab" href="#builds" data-go="builds" role="listitem">Open source</a>
+      <a class="tab" href="#profile" data-go="profile" role="listitem">Profile</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+<!-- ================= OVERVIEW ================= -->
+<div class="view" id="v-overview" data-view="overview">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Forward Deployed Engineer · AI Systems</div>
+        <h1>Rahul Kaura<span>Ships AI into production</span></h1>
+        <p class="lede">I embed with teams running real enterprise systems and build what gets AI working inside them: document pipelines, agent workflows, secrets infrastructure, and the observability to keep it running.</p>
+        <div class="ctas">
+          <a class="btn primary" href="#deployments" data-go="deployments">See deployments</a>
+          <a class="btn" href="#research" data-go="research">Read the research</a>
+          <a class="btn" href="https://github.com/Rahul-Kaura" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </div>
+      <div class="manifest" aria-label="Current assignment">
+        <header><span>current-assignment.yaml</span><span class="status"><span class="dot"></span>Deployed</span></header>
+        <dl>
+          <dt>org</dt><dd><b>Uniphore</b> · Business AI Cloud</dd>
+          <dt>role</dt><dd>Forward Deployed Engineer</dd>
+          <dt>since</dt><dd>Jun 2026</dd>
+          <dt>surface</dt><dd>Agentic Layer</dd>
+          <dt>shipping</dt><dd>Document intelligence, LLM/SLM inference, model routing, agent orchestration</dd>
+          <dt>infra</dt><dd>Kubernetes, External Secrets Operator</dd>
+          <dt>base</dt><dd>Santa Clara, CA</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="signals" aria-label="Highlights">
+            <div class="signal"><b>3</b><span>technical reports on production AI systems</span></div>
+            <div class="signal"><b>2</b><span>production AI teams embedded with: Uniphore and Empirik AI</span></div>
+      <div class="signal"><b>2</b><span>open-source field tools: driftguard and fieldrag</span></div>
+      <div class="signal"><b>31</b><span>published papers and standards cited across my reports</span></div>
+    </div>
+
+    <section class="block" aria-labelledby="map-h">
+      <div class="sechead">
+        <div><div class="eyebrow">System map</div><h2 id="map-h">Where my work sits in an AI platform</h2></div>
+        <p>Tap any layer to see what it does and what I built there. Green marks layers I've shipped production work in.</p>
+      </div>
+      <div class="map">
+        <div class="board">
+          <p class="lane-label">Request path</p>
+          <div class="flow">
+            <button class="node" type="button" data-node="sources" aria-pressed="false"><span class="k">01 Sources</span><span class="t">Business files &amp; telemetry</span></button>
+            <button class="node" type="button" data-node="ingest" aria-pressed="true"><span class="k">02 Ingest</span><span class="t">Parsing &amp; structure</span><span class="mine">shipped</span></button>
+            <button class="node" type="button" data-node="knowledge" aria-pressed="false"><span class="k">03 Knowledge</span><span class="t">Outlines, schema, RAG</span><span class="mine">shipped</span></button>
+            <button class="node" type="button" data-node="inference" aria-pressed="false"><span class="k">04 Inference</span><span class="t">LLM/SLM &amp; routing</span><span class="mine">shipped</span></button>
+            <button class="node" type="button" data-node="agents" aria-pressed="false"><span class="k">05 Agents</span><span class="t">Orchestration &amp; tools</span><span class="mine">shipped</span></button>
+          </div>
+          <p class="lane-label">Cross-cutting</p>
+          <div class="rails">
+            <button class="node rail" type="button" data-node="secrets" aria-pressed="false"><span><span class="k">Rail</span><br><span class="t">Secrets &amp; identity</span></span><span class="mine">shipped</span></button>
+            <button class="node rail" type="button" data-node="observe" aria-pressed="false"><span><span class="k">Rail</span><br><span class="t">Observability &amp; rollback</span></span><span class="mine">shipped</span></button>
+          </div>
+        </div>
+        <div class="detail" id="detail" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="block" aria-labelledby="fr-h">
+      <div class="sechead">
+        <div><div class="eyebrow">Research</div><h2 id="fr-h">Technical reports</h2></div>
+        <a class="textlink" href="#research" data-go="research">All research →</a>
+      </div>
+      <div class="papers" id="paper-cards-overview"></div>
+    </section>
+
+    <section class="block" aria-labelledby="ap-h">
+      <div class="sechead">
+        <div><div class="eyebrow">How I work</div><h2 id="ap-h">From customer problem to production</h2></div>
+        <p>Forward deployed work closes the gap between what a model does in a demo and what it does inside a customer's actual stack.</p>
+      </div>
+      <div class="method">
+        <div class="step"><div class="n">01 · EMBED</div><h3>Sit with the problem</h3><p>Start from the team's real workflow and data, not a spec. Find where the time and risk actually go.</p></div>
+        <div class="step"><div class="n">02 · MAP</div><h3>Trace the real system</h3><p>Follow data, credentials and signals end to end across services, clusters and vendors before changing anything.</p></div>
+        <div class="step"><div class="n">03 · SHIP</div><h3>Build for production</h3><p>Benchmark options on fidelity, latency and cost, then deploy the one that holds up under real load.</p></div>
+        <div class="step"><div class="n">04 · HARDEN</div><h3>Make it hold</h3><p>Declarative config, reconciliation, monitoring and rollback so it keeps working after I leave.</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= DEPLOYMENTS ================= -->
+<div class="view" id="v-deployments" data-view="deployments" hidden>
+  <div class="wrap">
+    <section class="block">
+      <div class="sechead">
+        <div><div class="eyebrow">Field deployments</div><h2>Shipped work</h2></div>
+        <p>Each one written as a deployment brief: what was broken, what I built, and what changed.</p>
+      </div>
+      <div class="filters" role="group" aria-label="Filter deployments">
+        <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter" type="button" data-filter="uniphore" aria-pressed="false">Uniphore</button>
+        <button class="filter" type="button" data-filter="manifest" aria-pressed="false">Empirik AI</button>
+        <button class="filter" type="button" data-filter="infra" aria-pressed="false">Infrastructure</button>
+        <button class="filter" type="button" data-filter="ai" aria-pressed="false">AI / ML</button>
+      </div>
+      <div class="deploys">
+        <article class="deploy" data-tags="uniphore ai">
+          <aside>
+            <div class="client">Uniphore · 2026</div>
+            <h3>Production document intelligence pipeline</h3>
+            <p class="meta">Business AI Cloud<br>Enterprise compliance search</p>
+            <div class="chips"><span class="chip">Transformers</span><span class="chip">RAG</span><span class="chip">Structured outputs</span><span class="chip">Python</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Compliance search was bottlenecked on unstructured business files: mixed formats, nested tables and footnotes that had to be prepped by hand before any model could use them.</p></div>
+            <div><h4>Shipped</h4><p>A transformer-based pipeline that parses heterogeneous files into hierarchical outlines, then generates abstractive summaries as schema-constrained, AI-ready output.</p></div>
+            <div class="result"><h4>Result</h4><p>Removed manual data prep and sped up downstream RAG inference across large document repositories.</p></div>
+            <div class="foot"><a class="textlink" href="#paper-ingestion" data-go="paper-ingestion">Read the technical report →</a></div>
+          </div>
+        </article>
+        <article class="deploy" data-tags="uniphore infra">
+          <aside>
+            <div class="client">Uniphore · 2026</div>
+            <h3>Declarative secrets for AI microservices</h3>
+            <p class="meta">Kubernetes platform<br>Auth + AI-service dependencies</p>
+            <div class="chips"><span class="chip">Kubernetes</span><span class="chip">External Secrets Operator</span><span class="chip">Encryption</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Credentials were injected manually, which slowed deployments and left security gaps across services that depend on authentication and AI backends.</p></div>
+            <div><h4>Shipped</h4><p>An External Secrets Operator architecture that syncs encrypted secrets from a central store and reconciles them into each workload, traced end to end to downstream APIs.</p></div>
+            <div class="result"><h4>Result</h4><p>Zero-downtime credential rotation and failure isolation across production AI microservices.</p></div>
+            <div class="foot"><a class="textlink" href="#paper-secrets" data-go="paper-secrets">Read the technical report →</a></div>
+          </div>
+        </article>
+        <article class="deploy" data-tags="uniphore ai">
+          <aside>
+            <div class="client">Uniphore · 2026</div>
+            <h3>Parser benchmark for production ingestion</h3>
+            <p class="meta">Document ingestion<br>Cost / quality tradeoff</p>
+            <div class="chips"><span class="chip">Benchmarking</span><span class="chip">Graph parsers</span><span class="chip">Transformers</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Picking a parser on demos alone is risky. Merged cells, nested tables and complex layouts break different tools in different ways.</p></div>
+            <div><h4>Shipped</h4><p>Reproducible benchmarks comparing graph-based and transformer-based parsers on extraction fidelity, intermediate representations, latency, inference compatibility and compute cost.</p></div>
+            <div class="result"><h4>Result</h4><p>Selected the production ingestion path for the document pipeline on evidence, not guesswork.</p></div>
+            <div class="foot"><a class="textlink" href="#paper-ingestion" data-go="paper-ingestion">Methodology in the technical report →</a></div>
+          </div>
+        </article>
+        <article class="deploy" data-tags="manifest ai infra">
+          <aside>
+            <div class="client">Empirik AI · 2025</div>
+            <h3>Autonomous LLM incident-response agent</h3>
+            <p class="meta">Production clusters<br>Formerly Manifest · Sequoia-incubated</p>
+            <div class="chips"><span class="chip">LangGraph</span><span class="chip">MCP</span><span class="chip">Isolation Forest</span><span class="chip">Datadog</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Unauthorized or abnormal state changes in production were hard to catch early, and alerts across tools were noisy and disconnected.</p></div>
+            <div><h4>Shipped</h4><p>An agent built on LangGraph, LangChain, MCP and the OpenAI API, using Isolation Forest on VictoriaLogs telemetry and correlating Kubernetes events, Datadog APM and LogicMonitor signals.</p></div>
+            <div class="result"><h4>Result</h4><p>Higher-confidence incident detection with less alert noise, plus automated rollback of high-risk production actions.</p></div>
+            <div class="foot"><a class="textlink" href="#paper-incident" data-go="paper-incident">Read the technical report →</a></div>
+          </div>
+        </article>
+        <article class="deploy" data-tags="manifest infra">
+          <aside>
+            <div class="client">Empirik AI · 2025</div>
+            <h3>Observability dashboard</h3>
+            <p class="meta">Development lead<br>Logs, changes and system state in one view</p>
+            <div class="chips"><span class="chip">Kubernetes</span><span class="chip">IAM</span><span class="chip">VictoriaLogs</span><span class="chip">Change tracking</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Most outages start with a change, but logs, changes to clusters, permissions, databases and networks, and live system state lived in different tools with no shared timeline.</p></div>
+            <div><h4>Shipped</h4><p>Led development of the platform's dashboard: log search, a timeline of structural changes across Kubernetes, IAM, databases and networking, and live system state, all in one place.</p></div>
+            <div class="result"><h4>Result</h4><p>Engineers and the incident agent work from the same view of what changed, when, and what it affected.</p></div>
+            <div class="foot"><span class="meta">In the news:</span><a class="textlink" href="https://sequoiacap.com/article/partnering-with-empirik-building-the-autonomous-infrastructure-engineer" target="_blank" rel="noopener">Sequoia Capital ↗</a><a class="textlink" href="https://pulse2.com/empirik-ai-raises-21-million-seed-round-to-build-autonomous-infrastructure-engineer/" target="_blank" rel="noopener">Pulse 2.0 ↗</a></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= RESEARCH ================= -->
+<div class="view" id="v-research" data-view="research" hidden>
+  <div class="wrap">
+    <section class="block">
+      <div class="sechead">
+        <div><div class="eyebrow">Research</div><h2>Technical reports</h2></div>
+        <p>Write-ups of the architecture, methods and lessons behind my production work. Customer data and internal metrics are left out.</p>
+      </div>
+      <div class="papers" id="paper-cards-research"></div>
+    </section>
+    <section class="block">
+      <div class="sechead"><div><div class="eyebrow">Essays</div><h2>Writing on Medium</h2></div></div>
+      <div class="posts">
+        <a class="post" href="https://medium.com/@rahulkaura2004/the-ai-renaissance-personalized-learning-and-self-correcting-recommendations-are-reshaping-our-7b0dc49a462b" target="_blank" rel="noopener">
+          <div class="meta">Mar 2026 · Medium ↗</div>
+          <h3>The AI Renaissance: Personalized Learning and Self-Correcting Recommendations</h3>
+          <p>AI as a learning companion, and recommendation systems that correct themselves.</p>
+        </a>
+        <a class="post" href="https://medium.com/@rahulkaura2004/the-ai-takeover-market-disruption-and-the-push-for-global-standards-065903227515" target="_blank" rel="noopener">
+          <div class="meta">Feb 2026 · Medium ↗</div>
+          <h3>The AI Takeover: Market Disruption and the Push for Global Standards</h3>
+          <p>How AI search reshapes information markets, the EU AI Act, and what enterprises should expect.</p>
+        </a>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= PAPER: SECRETS ================= -->
+<div class="view" id="v-paper-secrets" data-view="paper-secrets" hidden>
+  <div class="wrap reader">
+    <aside class="toc">
+      <a class="textlink" href="#research" data-go="research">← All research</a>
+      <ol>
+        <li><a href="#s-intro" data-jump>Introduction</a></li>
+        <li><a href="#s-related" data-jump>Background &amp; related work</a></li>
+        <li><a href="#s-threat" data-jump>Threat model</a></li>
+        <li><a href="#s-arch" data-jump>Architecture</a></li>
+        <li><a href="#s-recon" data-jump>Reconciliation semantics</a></li>
+        <li><a href="#s-rot" data-jump>Rotation protocol</a></li>
+        <li><a href="#s-fail" data-jump>Failure analysis</a></li>
+        <li><a href="#s-trace" data-jump>Dependency tracing</a></li>
+        <li><a href="#s-eval" data-jump>Evaluation method</a></li>
+        <li><a href="#s-limits" data-jump>Limitations</a></li>
+        <li><a href="#s-refs" data-jump>References</a></li>
+      </ol>
+    </aside>
+    <article class="doc">
+      <div class="kind"><span class="badge">Technical report</span><span class="badge">2026</span><span class="badge">Platform security</span><span class="badge">~18 min read</span></div>
+      <h1>Declarative Secret Delivery for AI Microservices on Kubernetes</h1>
+      <p class="byline">Rahul Kaura · Forward Deployed Engineering, Uniphore</p>
+      <div class="abstract"><h2>Abstract</h2><p>AI platforms depend on more credentials than most services: model provider keys, vector and relational database passwords, identity provider client secrets and tokens for internal APIs. Empirical studies of developer practice show that secrets are routinely stored in source, copied between environments and rotated rarely, and that deployment-time handling is among the hardest problems developers report. This report describes an architecture that moves an AI platform's credentials to declarative delivery with the External Secrets Operator (ESO): secret values live only in a central encrypted store, version control holds references, and a controller continuously reconciles them into per-service Kubernetes Secrets. We give a threat model and requirements, describe the reconciliation semantics the design relies on, derive a timing condition for zero-downtime rotation, analyze failure modes and their blast radius, and describe how dependency tracing was used to plan the migration. We close with an evaluation method and open problems, including short-lived credentials and policy-as-code enforcement.</p></div>
+
+      <h2 id="s-intro">1. Introduction</h2>
+      <p>A single request on an enterprise AI platform can cross an identity provider, an API gateway, a retrieval store, several model endpoints and an agent orchestration layer. Each hop authenticates, so each hop needs a credential. When those credentials reach workloads through manual steps (values pasted into <code>kubectl create secret</code>, copied between CI variables, or carried in environment files) the platform inherits three problems. Values drift between environments. Nobody can say with confidence which services consume a given key, so rotation turns into a coordinated outage. And secrets created outside version control have no review trail.</p>
+      <p>These are not unusual failures. A grey-literature review of 54 practitioner sources identified 24 secret-management practices across six categories, including keeping secrets out of source code, storing them in external secret managers, limiting exposure with short-lived credentials, and managing secrets separately per deployment environment <a class="cite" href="#s-r2" data-jump>[2]</a>. A companion study of 779 Stack Exchange questions found 27 recurring developer challenges, with storing and versioning secrets during deployment among the most common <a class="cite" href="#s-r3" data-jump>[3]</a>. The goal of this work was to put those recommended practices into the platform itself, so following them is the default rather than a discipline each team has to remember.</p>
+      <p>This report makes four contributions:</p>
+      <ul>
+        <li>A threat model and set of requirements for credential delivery on a multi-tenant AI platform (Section 3).</li>
+        <li>An ESO-based architecture that maps each requirement to a concrete mechanism and to the practices catalogued in <a class="cite" href="#s-r2" data-jump>[2]</a> (Section 4).</li>
+        <li>A timing condition for rotation without downtime, derived from the controller's reconciliation semantics (Sections 5 and 6).</li>
+        <li>A failure-mode analysis and a dependency-tracing method used to order the migration (Sections 7 and 8).</li>
+      </ul>
+
+      <h2 id="s-related">2. Background and related work</h2>
+      <h3>2.1 Reconciliation in Kubernetes</h3>
+      <p>Kubernetes is built from controllers that observe the cluster, compare actual state to a declared desired state, and act to close the difference. Burns et al. trace this design from Borg and Omega and argue that level-triggered reconciliation, as opposed to one-shot imperative commands, is what lets large systems recover from partial failure without manual intervention <a class="cite" href="#s-r1" data-jump>[1]</a>. Declarative secret delivery applies the same idea to credentials: the declared state is "this namespace should hold this key from this store," and a controller keeps re-establishing it.</p>
+      <h3>2.2 Empirical studies of secret management</h3>
+      <p>Basak et al. classify practices into six groups: keeping secrets out of source, storing them securely, limiting exposure, avoiding accidental commits, managing secrets in deployment, and organizational enforcement <a class="cite" href="#s-r2" data-jump>[2]</a>. Their follow-up study of developer questions finds that the most common recommended fixes are moving secrets into configuration templates, adopting secret management tools at deployment time, and using environment variables, while a growing share of questions go unanswered <a class="cite" href="#s-r3" data-jump>[3]</a>. SecretBench provides a labeled dataset of real secrets found in public repositories to evaluate detection tools <a class="cite" href="#s-r4" data-jump>[4]</a>. Detection matters, but it is reactive. This work targets the deployment and storage categories, where a platform can prevent the leak instead of finding it later.</p>
+      <h3>2.3 Misconfiguration in Kubernetes artifacts</h3>
+      <p>Rahman et al. study security misconfigurations in open-source Kubernetes manifests and find that insecure defaults and exposed sensitive data are common in real deployments <a class="cite" href="#s-r6" data-jump>[6]</a>. Minna, Massacci and Tuma analyze Helm charts from Artifact Hub with multiple static analyzers and test whether LLMs can propose fixes that pass the analyzers' policies on re-scan <a class="cite" href="#s-r5" data-jump>[5]</a>. Both lines of work point to the same lesson: secrets embedded in deployment artifacts are hard to audit and easy to get wrong, which favors designs where manifests carry only references.</p>
+      <h3>2.4 Zero trust</h3>
+      <p>NIST's zero trust architecture guidance treats every request as untrusted until authenticated and authorized, and calls for least-privilege access scoped per resource <a class="cite" href="#s-r7" data-jump>[7]</a>. In a cluster, that translates into scoping each workload's ability to read secrets to exactly the paths it needs, rather than granting a broad credential to a shared operator.</p>
+
+      <h2 id="s-threat">3. Threat model and requirements</h2>
+      <p><b>Assets.</b> Model provider API keys, data store credentials, identity provider client secrets and internal service tokens. Several of these carry direct cost exposure (a leaked model key can be billed against) as well as data exposure.</p>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Adversary or failure</th><th>Capability</th><th>What it can reach in the manual setup</th></tr></thead>
+        <tbody>
+          <tr><td>Leaked repository or CI log</td><td>Read access to code, manifests or build output</td><td>Any secret committed or echoed during a build</td></tr>
+          <tr><td>Compromised workload</td><td>Code execution in one pod</td><td>That pod's secrets, plus any shared secret bundle mounted alongside</td></tr>
+          <tr><td>Over-privileged operator identity</td><td>Read access to the central store</td><td>Every secret the identity is allowed to list</td></tr>
+          <tr><td>Operator error</td><td>Wrong value, wrong environment, missed rotation</td><td>Outages across every consumer of the shared value</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>From this we set six requirements:</p>
+      <ol>
+        <li><b>R1 · No values in Git.</b> Manifests may reference secrets but never contain them.</li>
+        <li><b>R2 · Least privilege.</b> A workload can read only the remote paths it consumes.</li>
+        <li><b>R3 · Encryption on every leg.</b> At rest in the store, in transit to the cluster, at rest in the cluster datastore.</li>
+        <li><b>R4 · Rotation without downtime.</b> Replacing a credential must not drop traffic.</li>
+        <li><b>R5 · Contained failure.</b> A bad reference or a store outage must not cascade across unrelated services.</li>
+        <li><b>R6 · Observability.</b> Every sync failure is visible before a request fails because of it.</li>
+      </ol>
+
+      <h2 id="s-arch">4. Architecture</h2>
+      <figure>
+        <div class="figscroll">
+        <svg viewBox="0 0 760 170" role="img" aria-label="Secret delivery flow from central store through ESO to workloads">
+          <defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <rect class="box" x="10" y="40" width="130" height="64" rx="8"/><text class="lbl" x="75" y="68" text-anchor="middle">Central store</text><text class="sub" x="75" y="86" text-anchor="middle">encrypted at rest</text>
+          <rect class="hl" x="180" y="40" width="150" height="64" rx="8"/><text class="lbl" x="255" y="68" text-anchor="middle">External Secrets</text><text class="sub" x="255" y="86" text-anchor="middle">store auth + refresh</text>
+          <rect class="box" x="370" y="40" width="130" height="64" rx="8"/><text class="lbl" x="435" y="68" text-anchor="middle">K8s Secret</text><text class="sub" x="435" y="86" text-anchor="middle">one per consumer</text>
+          <rect class="box" x="540" y="10" width="200" height="54" rx="8"/><text class="lbl" x="640" y="34" text-anchor="middle">Auth services</text><text class="sub" x="640" y="51" text-anchor="middle">IdP clients, gateway</text>
+          <rect class="box" x="540" y="82" width="200" height="54" rx="8"/><text class="lbl" x="640" y="106" text-anchor="middle">AI services</text><text class="sub" x="640" y="123" text-anchor="middle">model APIs, data stores</text>
+          <path class="arr" d="M140 72H178" marker-end="url(#m1)"/><path class="arr" d="M330 72H368" marker-end="url(#m1)"/>
+          <path class="arr" d="M500 64L538 40" marker-end="url(#m1)"/><path class="arr" d="M500 80L538 106" marker-end="url(#m1)"/>
+          <path class="dash" d="M435 104V156H255V106" marker-end="url(#m1)"/><text class="sub" x="345" y="150" text-anchor="middle">reconcile loop</text>
+        </svg>
+        </div>
+        <figcaption>Figure 1. Secret values live only in the central store. Git holds references; the operator reconciles them into per-consumer Secrets used by authentication and AI workloads.</figcaption>
+      </figure>
+      <p>ESO introduces custom resources that describe <i>where</i> a secret comes from without containing it <a class="cite" href="#s-r8" data-jump>[8]</a>. A <code>SecretStore</code> (namespaced) or <code>ClusterSecretStore</code> (cluster-wide) describes how to authenticate to the external provider. An <code>ExternalSecret</code> names the remote keys to fetch, how to map them into a target Kubernetes Secret, and how often to refresh. A generalized example:</p>
+<pre>apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: inference-gateway-creds
+  namespace: ai-inference
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: central-store
+  target:
+    name: inference-gateway-creds
+    creationPolicy: Owner
+  data:
+    - secretKey: MODEL_API_KEY
+      remoteRef:
+        key: ai-inference/model-provider
+        property: api_key</pre>
+      <p>The design decisions, and the requirement and documented practice each one serves:</p>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Decision</th><th>Requirement</th><th>Practice category in [2]</th></tr></thead>
+        <tbody>
+          <tr><td>Manifests carry <code>remoteRef</code> keys only; values never enter Git or CI</td><td>R1</td><td>Keep secrets out of source</td></tr>
+          <tr><td>Store paths namespaced by consumer; store auth scoped per namespace</td><td>R2</td><td>Limit exposure</td></tr>
+          <tr><td>Encrypted provider store, TLS to the operator, encryption at rest in the cluster datastore <a class="cite" href="#s-r9" data-jump>[9]</a></td><td>R3</td><td>Store secrets securely</td></tr>
+          <tr><td>One <code>ExternalSecret</code> and one target Secret per consuming service</td><td>R5</td><td>Manage secrets in deployment</td></tr>
+          <tr><td>Separate store paths per environment, same manifest shape</td><td>R1, R5</td><td>Different secrets per environment</td></tr>
+          <tr><td>Sync status exported to monitoring with alerting</td><td>R6</td><td>Audit and organizational enforcement</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The one-resource-per-consumer rule is the least obvious choice. A shared bundle (one Secret holding every key a namespace might need) is simpler to write but violates R2, because every pod that mounts it can read every key, and violates R5, because one bad key fails every consumer of the bundle.</p>
+
+      <h2 id="s-recon">5. Reconciliation semantics</h2>
+      <p>The design depends on four behaviors of the controller <a class="cite" href="#s-r8" data-jump>[8]</a>:</p>
+      <ul>
+        <li><b>Periodic refresh.</b> Each <code>ExternalSecret</code> is re-synced on its <code>refreshInterval</code>, so a value changed in the store reaches the cluster within one interval.</li>
+        <li><b>Ownership.</b> With <code>creationPolicy: Owner</code>, the target Secret is owned by the <code>ExternalSecret</code> and removed with it. This keeps environments clean but must be a deliberate choice during migration, when a pre-existing Secret might otherwise be adopted or deleted.</li>
+        <li><b>Status reporting.</b> Each resource reports its own readiness condition, so a failed sync is attributed to exactly one consumer.</li>
+        <li><b>Last known good.</b> When the provider cannot be reached, the existing target Secret is left in place rather than cleared, so running workloads keep working.</li>
+      </ul>
+      <p>From these, the worst-case time for a new value to be in use by a consumer is bounded by</p>
+      <p class="eq"><i>T</i><sub>prop</sub> &le; <i>r</i> + <i>t</i><sub>reload</sub></p>
+      <p>where <i>r</i> is the refresh interval and <i>t</i><sub>reload</sub> is how long the consumer takes to pick up the change. For a workload that reads a mounted file on each use, <i>t</i><sub>reload</sub> is the kubelet's volume update delay. For a workload that reads environment variables, the value is fixed at process start, so <i>t</i><sub>reload</sub> is the duration of a rolling restart. This distinction drove most of the per-service rotation plans.</p>
+
+      <h2 id="s-rot">6. Rotation protocol</h2>
+      <p>Zero-downtime rotation requires an overlap window during which both the old and the new credential are accepted by the provider. Let <i>W</i> be that window. Rotation is safe when</p>
+      <p class="eq"><i>W</i> &gt; <i>r</i> + <i>t</i><sub>reload</sub> + <i>t</i><sub>verify</sub> + <i>m</i></p>
+      <p>where <i>t</i><sub>verify</sub> is the time to confirm every consumer is healthy on the new value and <i>m</i> is a safety margin. If the provider does not support two valid credentials at once, the alternative is a blue-green swap at the consumer level, which is slower and is reserved for those providers.</p>
+<pre>rotate(secret_path, consumers):
+    new = provider.issue_credential()          # old stays valid
+    store.write(secret_path, new)
+    wait_until(all(c.secret_version == new.version for c in consumers),
+               timeout = r + t_reload)
+    for c in consumers where c.reads_env_vars:
+        rolling_restart(c, max_unavailable = 0)
+    assert all(healthy(c) and c.authenticates_with(new) for c in consumers)
+    provider.revoke(old)                       # only after verification</pre>
+      <p>Revocation is the last step and is gated on verification, never on time alone. A rotation that stalls leaves the old credential valid and raises an alert; it does not break traffic.</p>
+
+      <h2 id="s-fail">7. Failure analysis</h2>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Failure</th><th>Effect with shared bundles</th><th>Effect with per-consumer resources</th><th>Detection</th></tr></thead>
+        <tbody>
+          <tr><td>Remote key missing or renamed</td><td>Bundle fails to sync; every consumer affected on next restart</td><td>One consumer's sync fails; others unaffected</td><td>Readiness condition on that resource</td></tr>
+          <tr><td>Store denies access</td><td>All namespaces using the shared identity fail</td><td>Only the namespace whose scope changed</td><td>Sync error alert</td></tr>
+          <tr><td>Store unreachable</td><td>New pods cannot start if secrets are fetched at boot</td><td>Existing Secrets retained; running pods continue</td><td>Operator and store health checks</td></tr>
+          <tr><td>Wrong value written</td><td>All consumers break together</td><td>Only consumers of that path break; rollback is a store revert</td><td>Consumer health checks after sync</td></tr>
+          <tr><td>Operator down</td><td>Not applicable</td><td>No new syncs; existing Secrets keep working</td><td>Controller liveness alert</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>In every row, the per-consumer design either confines the failure to one service or degrades to "no updates" rather than "no service." That is the property R5 asks for.</p>
+
+      <h2 id="s-trace">8. Dependency tracing</h2>
+      <p>The largest risk in the migration was not the operator but not knowing who used what. Before moving anything, each credential was traced end to end and recorded as a graph with three node types (service, secret, provider) and edges for "consumes" and "authenticates to." For each service the trace recorded how the secret is read (file or environment variable), which downstream API or model endpoint accepts it, and what fails if it is wrong.</p>
+      <p>That graph did three jobs. It ordered the migration, moving leaf services first and shared dependencies such as the authentication path last. It exposed shared credentials that needed to be split before least privilege was possible. And it became the input to each rotation plan, since <i>t</i><sub>reload</sub> depends on how each consumer reads its secret.</p>
+
+      <h2 id="s-eval">9. Evaluation method</h2>
+      <p>We evaluate the design operationally rather than with a benchmark. The measures that matter, and how each is collected:</p>
+      <ul>
+        <li><b>Manual secret count:</b> Secrets in the cluster with no owning <code>ExternalSecret</code>. The target is zero outside an allowlist.</li>
+        <li><b>Sync health:</b> Failed syncs per day and time to resolve, from controller status.</li>
+        <li><b>Time to rotate:</b> From issuing a new credential to revoking the old one, per secret class.</li>
+        <li><b>Rotation-caused errors:</b> Authentication failures at consumers during a rotation window. The target is zero.</li>
+        <li><b>Blast radius:</b> Number of services that fail when a single remote key is broken in a staging drill.</li>
+      </ul>
+      <p class="note">Measured values are omitted because they come from an internal production environment. Environment names, store paths and provider details in this report are generalized.</p>
+
+      <h2 id="s-limits">10. Limitations and future work</h2>
+      <p><b>Long-lived credentials.</b> Many AI providers still issue static API keys. The design rotates them safely but cannot make them short-lived. Where providers support it, dynamically issued, short-lived credentials bound to workload identity would remove most of the rotation burden, which is the "limit exposure" practice in <a class="cite" href="#s-r2" data-jump>[2]</a> taken further.</p>
+      <p><b>Read auditing.</b> The store logs which identity fetched a value, but not which pod used it afterward. Linking the two would make incident response faster after a suspected leak.</p>
+      <p><b>Policy as code.</b> Nothing yet prevents a new <code>ExternalSecret</code> from requesting a path outside its namespace's intended scope beyond what store permissions allow. Admission-time policy checks would close that gap. Work on LLM-proposed fixes for Kubernetes and Helm misconfigurations <a class="cite" href="#s-r5" data-jump>[5]</a> suggests such checks could also propose corrections, though the generated fixes would still need verification by re-scanning.</p>
+
+      <h2 id="s-refs">References</h2>
+      <ol class="refs">
+        <li id="s-r1">B. Burns, B. Grant, D. Oppenheimer, E. Brewer, J. Wilkes. "Borg, Omega, and Kubernetes." <i>ACM Queue</i> 14(1), 2016.</li>
+        <li id="s-r2">S. K. Basak, L. Neil, B. Reaves, L. Williams. "What are the Practices for Secret Management in Software Artifacts?" 2022. <a href="https://arxiv.org/abs/2208.11280" target="_blank" rel="noopener">arXiv:2208.11280</a></li>
+        <li id="s-r3">S. K. Basak, L. Neil, B. Reaves, L. Williams. "What Challenges Do Developers Face About Checked-in Secrets in Software Artifacts?" <i>ICSE</i>, 2023. <a href="https://arxiv.org/abs/2301.12377" target="_blank" rel="noopener">arXiv:2301.12377</a></li>
+        <li id="s-r4">S. K. Basak et al. "SecretBench: A Dataset of Software Secrets." <i>MSR</i>, 2023. <a href="https://arxiv.org/abs/2303.06729" target="_blank" rel="noopener">arXiv:2303.06729</a></li>
+        <li id="s-r5">F. Minna, F. Massacci, K. Tuma. "Analyzing and Mitigating (with LLMs) the Security Misconfigurations of Helm Charts from Artifact Hub." 2024. <a href="https://arxiv.org/abs/2403.09537" target="_blank" rel="noopener">arXiv:2403.09537</a></li>
+        <li id="s-r6">A. Rahman et al. "Security Misconfigurations in Open Source Kubernetes Manifests: An Empirical Study." <i>ACM TOSEM</i>, 2023.</li>
+        <li id="s-r7">S. Rose, O. Borchert, S. Mitchell, S. Connelly. "Zero Trust Architecture." NIST Special Publication 800-207, 2020.</li>
+        <li id="s-r8">External Secrets Operator documentation. <a href="https://external-secrets.io" target="_blank" rel="noopener">external-secrets.io</a></li>
+        <li id="s-r9">Kubernetes documentation. "Encrypting Confidential Data at Rest." <a href="https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/" target="_blank" rel="noopener">kubernetes.io</a></li>
+      </ol>
+      <div class="next"><a class="textlink" href="#research" data-go="research">← All research</a><a class="textlink" href="#paper-ingestion" data-go="paper-ingestion">Next: Structure-preserving ingestion →</a></div>
+    </article>
+  </div>
+</div>
+<!-- ================= PAPER: INGESTION ================= -->
+<div class="view" id="v-paper-ingestion" data-view="paper-ingestion" hidden>
+  <div class="wrap reader">
+    <aside class="toc">
+      <a class="textlink" href="#research" data-go="research">← All research</a>
+      <ol>
+        <li><a href="#i-intro" data-jump>Introduction</a></li>
+        <li><a href="#i-related" data-jump>Related work</a></li>
+        <li><a href="#i-problem" data-jump>Problem formulation</a></li>
+        <li><a href="#i-pipe" data-jump>Pipeline</a></li>
+        <li><a href="#i-tables" data-jump>Table normalization</a></li>
+        <li><a href="#i-summ" data-jump>Outlines &amp; summaries</a></li>
+        <li><a href="#i-schema" data-jump>Schema-constrained output</a></li>
+        <li><a href="#i-chunk" data-jump>Path-aware indexing</a></li>
+        <li><a href="#i-bench" data-jump>Parser benchmark</a></li>
+        <li><a href="#i-obs" data-jump>Observations</a></li>
+        <li><a href="#i-limits" data-jump>Limitations</a></li>
+        <li><a href="#i-refs" data-jump>References</a></li>
+      </ol>
+    </aside>
+    <article class="doc">
+      <div class="kind"><span class="badge">Technical report</span><span class="badge">2026</span><span class="badge">Document AI · RAG</span><span class="badge">~22 min read</span></div>
+      <h1>Structure-Preserving Document Ingestion for Enterprise RAG</h1>
+      <p class="byline">Rahul Kaura · Forward Deployed Engineering, Uniphore</p>
+      <div class="abstract"><h2>Abstract</h2><p>Retrieval-augmented generation assumes that a retrieved passage carries the information needed to answer a question. Enterprise compliance documents break that assumption: the meaning of a clause depends on the section above it, a table cell depends on merged headers, and exceptions live in footnotes. Fixed-size chunking discards this structure, and language models are known to use long, unstructured contexts unevenly. We describe a production ingestion pipeline that converts heterogeneous business files into a typed document tree, resolves table headers including merged cells, generates abstractive summaries along the document's own hierarchy, validates every record against a JSON schema, and indexes chunks together with their outline path. We relate each stage to prior work on layout-aware models, table extraction datasets, hierarchical retrieval and constrained decoding. We also describe the benchmark used to choose between graph-based and transformer-based parsers, using text, table-structure and tree-level fidelity, latency, schema validity and compute cost, and a selection rule that picks the cheapest parser meeting fidelity floors.</p></div>
+
+      <h2 id="i-intro">1. Introduction</h2>
+      <p>Retrieval-augmented generation (RAG) pairs a parametric model with a non-parametric index so the model can ground its output in retrieved text <a class="cite" href="#i-r1" data-jump>[1]</a>. In practice, retrieval quality is limited less by the retriever than by what was indexed. Most pipelines split extracted text into fixed-length windows. For compliance search that is the wrong unit. A sentence like "this requirement does not apply" is useless without the heading that says which requirement, and a value from a table row is wrong if it is attached to the wrong column header.</p>
+      <p>Simply passing more context to the model is not a reliable fix. Liu et al. show that model accuracy on multi-document question answering drops when the relevant passage sits in the middle of a long context rather than at the start or end <a class="cite" href="#i-r2" data-jump>[2]</a>. Context has to be small and correct, which means it has to be structured before it reaches the index.</p>
+      <p>Before this pipeline, preparing compliance files for search required manual cleanup. That did not scale to large repositories and delayed downstream queries. This report contributes:</p>
+      <ul>
+        <li>A typed intermediate representation (IR) that decouples parsing from everything downstream (Section 3).</li>
+        <li>A production pipeline built on that IR, including a header-resolution procedure for merged table cells (Sections 4 and 5).</li>
+        <li>A design for hierarchy-aligned summaries and path-aware chunks, contrasted with clustering-based hierarchical retrieval (Sections 6 and 8).</li>
+        <li>A schema-validation loop and the reasoning for post-hoc validation over constrained decoding in this setting (Section 7).</li>
+        <li>A reproducible benchmark and selection rule for choosing a production parser (Section 9).</li>
+      </ul>
+
+      <h2 id="i-related">2. Related work</h2>
+      <h3>2.1 Layout-aware document models</h3>
+      <p>LayoutLM introduced joint pre-training over text and 2-D position, showing that layout is a strong signal for document understanding <a class="cite" href="#i-r5" data-jump>[5]</a>. LayoutLMv3 unifies text and image masking in pre-training and applies to both text-centric and image-centric document tasks <a class="cite" href="#i-r6" data-jump>[6]</a>. Both build on the transformer architecture <a class="cite" href="#i-r14" data-jump>[14]</a>. Nougat goes further, transcribing page images of academic documents directly into markup with an encoder-decoder transformer <a class="cite" href="#i-r11" data-jump>[11]</a>. These are the transformer-based family in our benchmark.</p>
+      <h3>2.2 Graph-based document understanding</h3>
+      <p>Graph approaches model a page as nodes (words, lines or layout entities) connected by spatial and reading-order edges. Doc2Graph builds such graphs and applies graph neural networks to tasks including key-value linking and table detection, independent of document type <a class="cite" href="#i-r7" data-jump>[7]</a>. Graph methods tend to give explainable, predictable decisions because relations are explicit, which matters when an extraction has to be audited.</p>
+      <h3>2.3 Layout and table datasets</h3>
+      <p>DocLayNet provides human-annotated layout labels across diverse document categories, which makes it a better training source for enterprise documents than corpora drawn from a single domain <a class="cite" href="#i-r8" data-jump>[8]</a>. PubTables-1M contributes nearly a million annotated tables and, importantly for us, a canonicalization procedure that merges over-split header cells so each table has one unambiguous structure; the authors report this changed a large share of complex tables <a class="cite" href="#i-r9" data-jump>[9]</a>. Zhong et al. introduced the tree-edit-distance-based similarity metric (TEDS) for comparing predicted and true table structure <a class="cite" href="#i-r15" data-jump>[15]</a>, which we adopt for table fidelity.</p>
+      <h3>2.4 End-to-end conversion toolkits</h3>
+      <p>Docling combines a layout model trained on DocLayNet with TableFormer for table structure, matches predictions back to the PDF's own text cells rather than re-transcribing them, and assembles a typed document that can be exported to JSON or Markdown <a class="cite" href="#i-r10" data-jump>[10]</a>. Our IR follows the same principle of a typed, export-neutral document object between parsing and use.</p>
+      <h3>2.5 Hierarchical and structure-aware retrieval</h3>
+      <p>RAPTOR recursively embeds, clusters and summarizes chunks into a tree, then retrieves across levels; the authors find that searching a collapsed version of the tree under a token budget works better than top-down traversal <a class="cite" href="#i-r3" data-jump>[3]</a>. Jimeno Yepes et al. show on financial reports that chunking by document element type, instead of by fixed size or paragraph, substantially improves RAG and removes the need to tune chunk size by hand <a class="cite" href="#i-r4" data-jump>[4]</a>. Our design sits between the two: like <a class="cite" href="#i-r4" data-jump>[4]</a> it uses the document's real elements, and like <a class="cite" href="#i-r3" data-jump>[3]</a> it adds summaries at higher levels of a tree, but the tree is the document's own hierarchy rather than one learned by clustering.</p>
+      <h3>2.6 Structured generation</h3>
+      <p>Willard and Louf reformulate guided generation as transitions in a finite-state machine over the vocabulary, making regex and grammar constraints efficient at decode time <a class="cite" href="#i-r12" data-jump>[12]</a>. JSONSchemaBench evaluates six constrained decoding frameworks on about 10K real-world JSON schemas along efficiency, constraint coverage and output quality, and finds meaningful gaps in coverage across frameworks <a class="cite" href="#i-r13" data-jump>[13]</a>. This motivates the validate-and-retry design in Section 7.</p>
+
+      <h2 id="i-problem">3. Problem formulation</h2>
+      <p>A source document <i>D</i> is converted into a rooted, ordered tree <i>T</i> = (<i>V</i>, <i>E</i>). Each node <i>v</i> &isin; <i>V</i> has a type <i>&tau;</i>(<i>v</i>) &isin; {document, section, paragraph, list, table, row, cell, footnote, figure}, text <i>x</i>(<i>v</i>), a source anchor (page and bounding box), and type-specific attributes. Edges encode containment. Cells additionally carry resolved row and column header paths. Footnotes carry a reference edge to the node that cites them.</p>
+      <p>The <b>outline path</b> of a node is the sequence of section titles from the root to its nearest section ancestor:</p>
+      <p class="eq">path(<i>v</i>) = &lang; title(<i>s</i><sub>1</sub>), title(<i>s</i><sub>2</sub>), &hellip;, title(<i>s</i><sub>k</sub>) &rang;</p>
+      <p>The IR is the only contract between parsing and the rest of the system. Any parser that emits a valid <i>T</i> can be swapped in without changing summarization, validation or indexing. This is what makes the comparison in Section 9 fair: every parser is scored on the same downstream output.</p>
+
+      <h2 id="i-pipe">4. Pipeline</h2>
+      <figure>
+        <div class="figscroll">
+        <svg viewBox="0 0 760 130" role="img" aria-label="Ingestion pipeline stages">
+          <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+          <rect class="box" x="6" y="34" width="112" height="60" rx="8"/><text class="lbl" x="62" y="61" text-anchor="middle">Raw files</text><text class="sub" x="62" y="78" text-anchor="middle">mixed formats</text>
+          <rect class="hl" x="134" y="34" width="112" height="60" rx="8"/><text class="lbl" x="190" y="61" text-anchor="middle">Layout parse</text><text class="sub" x="190" y="78" text-anchor="middle">graph | transformer</text>
+          <rect class="hl" x="262" y="34" width="112" height="60" rx="8"/><text class="lbl" x="318" y="61" text-anchor="middle">Doc tree (IR)</text><text class="sub" x="318" y="78" text-anchor="middle">typed nodes</text>
+          <rect class="box" x="390" y="34" width="112" height="60" rx="8"/><text class="lbl" x="446" y="61" text-anchor="middle">Outline +</text><text class="sub" x="446" y="78" text-anchor="middle">summaries</text>
+          <rect class="box" x="518" y="34" width="112" height="60" rx="8"/><text class="lbl" x="574" y="61" text-anchor="middle">Schema check</text><text class="sub" x="574" y="78" text-anchor="middle">validate / retry</text>
+          <rect class="box" x="646" y="34" width="108" height="60" rx="8"/><text class="lbl" x="700" y="61" text-anchor="middle">RAG index</text><text class="sub" x="700" y="78" text-anchor="middle">path-aware chunks</text>
+          <path class="arr" d="M118 64H132" marker-end="url(#m2)"/><path class="arr" d="M246 64H260" marker-end="url(#m2)"/><path class="arr" d="M374 64H388" marker-end="url(#m2)"/><path class="arr" d="M502 64H516" marker-end="url(#m2)"/><path class="arr" d="M630 64H644" marker-end="url(#m2)"/>
+        </svg>
+        </div>
+        <figcaption>Figure 1. The two highlighted stages are interchangeable per parser; everything after the document tree is shared.</figcaption>
+      </figure>
+      <ol>
+        <li><b>Layout parsing.</b> Each page yields typed layout elements with positions: headings, paragraphs, list items, tables, cells, footnotes, figures and captions.</li>
+        <li><b>Tree construction.</b> Elements are ordered by reading order and nested by heading level, numbering patterns ("4.2.1") and indentation. Footnote markers are linked to their footnotes.</li>
+        <li><b>Table normalization.</b> Header cells are resolved for every body cell, including merged and multi-row headers (Section 5).</li>
+        <li><b>Outline and summaries.</b> Section summaries are generated bottom-up along the tree (Section 6).</li>
+        <li><b>Schema validation.</b> Every emitted record is validated; failures are regenerated with the error message as feedback (Section 7).</li>
+        <li><b>Indexing.</b> Chunks are formed from tree nodes and stored with their outline path and summary (Section 8).</li>
+      </ol>
+
+      <h2 id="i-tables">5. Table normalization</h2>
+      <p>Merged header cells are the most common source of silent extraction errors: text is extracted correctly but attached to the wrong header. Following the canonicalization idea in PubTables-1M <a class="cite" href="#i-r9" data-jump>[9]</a>, we first expand every spanning cell into the grid positions it covers, then resolve each body cell's full header path:</p>
+<pre>resolve_headers(table):
+    G = expand_spans(table)              # each spanning cell fills every grid slot it covers
+    H_rows = detect_header_rows(G)       # top rows that are mostly text and repeat across columns
+    H_cols = detect_header_cols(G)       # left columns that act as row labels
+    for cell in body_cells(G):
+        col_path = [G[r][cell.col].text for r in H_rows if G[r][cell.col].text]
+        row_path = [G[cell.row][c].text for c in H_cols if G[cell.row][c].text]
+        cell.col_header = dedupe_adjacent(col_path)   # merged parents appear once
+        cell.row_header = dedupe_adjacent(row_path)
+    return G</pre>
+      <p>Each body cell is then serialized with its headers attached, for example <code>Retention period › Backups › Region B: 35 days</code>, so the value never travels without its meaning. Tables are scored with TEDS <a class="cite" href="#i-r15" data-jump>[15]</a> against hand-labeled ground truth in the benchmark.</p>
+
+      <h2 id="i-summ">6. Hierarchy-aligned outlines and summaries</h2>
+      <p>Long sections are hard to retrieve by keyword because the relevant terms are spread across paragraphs. We generate an abstractive summary for each section node, bottom-up: leaf sections are summarized from their text, and parent sections are summarized from their own text plus their children's summaries. A parent summary therefore describes its whole subtree in a bounded number of tokens.</p>
+      <p>This resembles RAPTOR's recursive summarization <a class="cite" href="#i-r3" data-jump>[3]</a> with one deliberate difference. RAPTOR builds its hierarchy by clustering chunk embeddings, which is the right choice when a corpus has no reliable structure. Compliance documents do have structure, authored on purpose, and auditors cite it ("Section 4.2"). Using the document's own hierarchy keeps every summary traceable to a citable section, which a clustered summary spanning unrelated sections would not be.</p>
+
+      <h2 id="i-schema">7. Schema-constrained output</h2>
+      <p>Every record leaving the pipeline conforms to a fixed schema. A simplified version:</p>
+<pre>{
+  "doc_id":   "string",
+  "node_id":  "string",
+  "type":     "section | paragraph | table_cell | footnote",
+  "path":     ["string"],
+  "text":     "string",
+  "summary":  "string | null",
+  "headers":  {"row": ["string"], "col": ["string"]},
+  "source":   {"page": "integer", "bbox": ["number", "number", "number", "number"]}
+}</pre>
+      <p>There are two ways to guarantee conformance. Constrained decoding restricts the model's tokens at generation time <a class="cite" href="#i-r12" data-jump>[12]</a>. Post-hoc validation generates freely, validates, and retries with the validator's error as feedback. JSONSchemaBench shows that constraint coverage differs substantially across decoding frameworks <a class="cite" href="#i-r13" data-jump>[13]</a>, and the pipeline has to work across more than one model backend. We therefore validate every record regardless of how it was generated, and use constrained decoding opportunistically where the backend supports the needed schema features.</p>
+<pre>emit(node, max_attempts = 3):
+    for attempt in 1..max_attempts:
+        rec = generate_record(node, feedback = last_error)
+        ok, last_error = validate(rec, SCHEMA)
+        if ok: return rec
+    quarantine(node, last_error)        # never indexed; surfaced for review</pre>
+      <p>Records that never validate are quarantined, not indexed. A missing record is visible and fixable; a malformed one silently degrades retrieval.</p>
+
+      <h2 id="i-chunk">8. Path-aware indexing</h2>
+      <p>Chunks are formed from tree nodes rather than from token windows, following the element-based approach of <a class="cite" href="#i-r4" data-jump>[4]</a>. Each indexed unit is a triple</p>
+      <p class="eq">chunk(<i>v</i>) = &lang; path(<i>v</i>), <i>x</i>(<i>v</i>), summary(parent(<i>v</i>)) &rang;</p>
+      <p>The path and parent summary are prepended to the text that is embedded and to the text passed to the model. A retrieved paragraph therefore arrives as "Policy › 4 Data Retention › 4.2 Exceptions: …" together with a one-paragraph description of what Section 4 covers. This keeps each context short, which matters given the position sensitivity reported in <a class="cite" href="#i-r2" data-jump>[2]</a>, while still carrying the context the passage depends on.</p>
+
+      <h2 id="i-bench">9. Parser benchmark</h2>
+      <h3>9.1 Corpus</h3>
+      <p>A fixed evaluation set was stratified by known failure mode: nested tables, merged header cells, footnote-heavy pages, multi-column layouts and deep numbered hierarchies. Each document has hand-labeled ground truth for text, table structure and section tree. The set, parser versions, configuration and hardware were frozen so any result can be re-run.</p>
+      <h3>9.2 Metrics</h3>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Dimension</th><th>Metric</th><th>What it catches</th></tr></thead>
+        <tbody>
+          <tr><td>Text fidelity</td><td>Normalized edit distance and token-level F1 against ground truth</td><td>Dropped, duplicated or garbled text</td></tr>
+          <tr><td>Table fidelity</td><td>TEDS <a class="cite" href="#i-r15" data-jump>[15]</a> and cell-level header accuracy after Section 5</td><td>Values attached to the wrong header</td></tr>
+          <tr><td>Tree fidelity</td><td>Tree edit distance between predicted and true section trees, normalized by size</td><td>Wrong nesting; sections merged or split</td></tr>
+          <tr><td>Latency</td><td>Median and 95th-percentile seconds per page</td><td>Parsers too slow for repository-scale backfills</td></tr>
+          <tr><td>Inference compatibility</td><td>Share of records valid on first attempt; share exceeding the token budget</td><td>Output the downstream model cannot use without repair</td></tr>
+          <tr><td>Cost</td><td>Compute cost per thousand pages at production batch sizes</td><td>Parsers that are accurate but unaffordable at scale</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <h3>9.3 Selection rule</h3>
+      <p>Averaging these into one score hides the failure that matters most. Instead we set a minimum acceptable value <i>f</i><sub>min</sub> for each fidelity metric and choose</p>
+      <p class="eq"><i>p</i>* = argmin<sub><i>p</i> &isin; <i>P</i></sub> cost(<i>p</i>) &nbsp; subject to &nbsp; fidelity<sub><i>j</i></sub>(<i>p</i>) &ge; <i>f</i><sub>min,<i>j</i></sub> for every <i>j</i>, and latency<sub>p95</sub>(<i>p</i>) &le; <i>L</i></p>
+      <p>That is, the cheapest parser that clears every fidelity floor and the latency budget. Because metrics are computed per stratum, the same rule can choose different parsers for different document types.</p>
+
+      <h2 id="i-obs">10. Observations</h2>
+      <ul>
+        <li><b>No parser dominated.</b> The tradeoff between fidelity and cost depended on the document type, which is why the selection rule is applied per stratum rather than once.</li>
+        <li><b>Merged headers were the main silent error.</b> Most table errors were correct text attached to the wrong header, which text-level metrics alone do not catch. TEDS plus header accuracy did.</li>
+        <li><b>Validation earned its cost.</b> The validate-and-retry loop kept malformed records out of the index; quarantine made the remainder visible for review instead of silently degrading retrieval.</li>
+        <li><b>The IR made iteration cheap.</b> Because downstream stages read only the tree, re-running the benchmark after a parser update required no pipeline changes.</li>
+      </ul>
+      <p class="note">Quantitative results are omitted because they were measured on internal customer documents.</p>
+
+      <h2 id="i-limits">11. Limitations and future work</h2>
+      <p><b>Threats to validity.</b> Ground truth was labeled by a small number of annotators, so structural labels for ambiguous layouts reflect their judgment. The evaluation set is stratified for hard cases and over-represents them relative to a real repository, which biases fidelity downward and cost comparisons toward the hard tail.</p>
+      <p><b>Scanned documents.</b> Scanned inputs depend on OCR quality, which the pipeline does not control. Page-to-markup models such as Nougat <a class="cite" href="#i-r11" data-jump>[11]</a> are a candidate path for this subset.</p>
+      <p><b>Retrieval-level evaluation.</b> This benchmark measures parsing. The next step is end-to-end evaluation of answer quality on a fixed question set, so parser choice can be tied directly to the metric users care about.</p>
+      <p><b>Routing.</b> A lightweight classifier could route each file to the cheapest parser likely to clear the fidelity floors for its document type, applying the Section 9.3 rule per file instead of per stratum.</p>
+
+      <h2 id="i-refs">References</h2>
+      <ol class="refs">
+        <li id="i-r1">P. Lewis et al. "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." <i>NeurIPS</i>, 2020. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arXiv:2005.11401</a></li>
+        <li id="i-r2">N. F. Liu et al. "Lost in the Middle: How Language Models Use Long Contexts." <i>TACL</i>, 2024. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arXiv:2307.03172</a></li>
+        <li id="i-r3">P. Sarthi, S. Abdullah, A. Tuli et al. "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval." <i>ICLR</i>, 2024. <a href="https://arxiv.org/abs/2401.18059" target="_blank" rel="noopener">arXiv:2401.18059</a></li>
+        <li id="i-r4">A. Jimeno Yepes, Y. You, J. Milczek, S. Laverde, R. Li. "Financial Report Chunking for Effective Retrieval Augmented Generation." 2024. <a href="https://arxiv.org/abs/2402.05131" target="_blank" rel="noopener">arXiv:2402.05131</a></li>
+        <li id="i-r5">Y. Xu et al. "LayoutLM: Pre-training of Text and Layout for Document Image Understanding." <i>KDD</i>, 2020. <a href="https://arxiv.org/abs/1912.13318" target="_blank" rel="noopener">arXiv:1912.13318</a></li>
+        <li id="i-r6">Y. Huang et al. "LayoutLMv3: Pre-training for Document AI with Unified Text and Image Masking." <i>ACM Multimedia</i>, 2022. <a href="https://arxiv.org/abs/2204.08387" target="_blank" rel="noopener">arXiv:2204.08387</a></li>
+        <li id="i-r7">A. Gemelli et al. "Doc2Graph: a Task Agnostic Document Understanding Framework based on Graph Neural Networks." <i>ECCV Workshops</i>, 2022. <a href="https://arxiv.org/abs/2208.11168" target="_blank" rel="noopener">arXiv:2208.11168</a></li>
+        <li id="i-r8">B. Pfitzmann et al. "DocLayNet: A Large Human-Annotated Dataset for Document-Layout Analysis." <i>KDD</i>, 2022. <a href="https://arxiv.org/abs/2206.01062" target="_blank" rel="noopener">arXiv:2206.01062</a></li>
+        <li id="i-r9">B. Smock, R. Pesala, R. Abraham. "PubTables-1M: Towards Comprehensive Table Extraction from Unstructured Documents." <i>CVPR</i>, 2022. <a href="https://arxiv.org/abs/2110.00061" target="_blank" rel="noopener">arXiv:2110.00061</a></li>
+        <li id="i-r10">C. Auer, M. Lysak, A. Nassar, M. Dolfi, N. Livathinos et al. "Docling Technical Report." 2024. <a href="https://arxiv.org/abs/2408.09869" target="_blank" rel="noopener">arXiv:2408.09869</a></li>
+        <li id="i-r11">L. Blecher et al. "Nougat: Neural Optical Understanding for Academic Documents." <i>ICLR</i>, 2024. <a href="https://arxiv.org/abs/2308.13418" target="_blank" rel="noopener">arXiv:2308.13418</a></li>
+        <li id="i-r12">B. T. Willard, R. Louf. "Efficient Guided Generation for Large Language Models." 2023. <a href="https://arxiv.org/abs/2307.09702" target="_blank" rel="noopener">arXiv:2307.09702</a></li>
+        <li id="i-r13">S. Geng, H. Cooper, M. Moskal et al. "JSONSchemaBench: A Rigorous Benchmark of Structured Outputs for Language Models." 2025. <a href="https://arxiv.org/abs/2501.10868" target="_blank" rel="noopener">arXiv:2501.10868</a></li>
+        <li id="i-r14">A. Vaswani et al. "Attention Is All You Need." <i>NeurIPS</i>, 2017. <a href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">arXiv:1706.03762</a></li>
+        <li id="i-r15">X. Zhong, E. ShafieiBavani, A. Jimeno Yepes. "Image-based Table Recognition: Data, Model, and Evaluation." <i>ECCV</i>, 2020. <a href="https://arxiv.org/abs/1911.10683" target="_blank" rel="noopener">arXiv:1911.10683</a></li>
+      </ol>
+      <div class="next"><a class="textlink" href="#paper-secrets" data-go="paper-secrets">← Declarative secret delivery</a><a class="textlink" href="#paper-incident" data-go="paper-incident">Next: Agentic incident response →</a></div>
+    </article>
+  </div>
+</div>
+<!-- ================= PAPER: INCIDENT ================= -->
+<div class="view" id="v-paper-incident" data-view="paper-incident" hidden>
+  <div class="wrap reader">
+    <aside class="toc">
+      <a class="textlink" href="#research" data-go="research">← All research</a>
+      <ol>
+        <li><a href="#a-intro" data-jump>Introduction</a></li>
+        <li><a href="#a-related" data-jump>Related work</a></li>
+        <li><a href="#a-signals" data-jump>Signals &amp; problem setting</a></li>
+        <li><a href="#a-detect" data-jump>Detection</a></li>
+        <li><a href="#a-corr" data-jump>Cross-source correlation</a></li>
+        <li><a href="#a-agent" data-jump>Agent architecture</a></li>
+        <li><a href="#a-rollback" data-jump>Rollback policy</a></li>
+        <li><a href="#a-change" data-jump>Change observability</a></li>
+        <li><a href="#a-eval" data-jump>Evaluation method</a></li>
+        <li><a href="#a-limits" data-jump>Limitations</a></li>
+        <li><a href="#a-refs" data-jump>References</a></li>
+      </ol>
+    </aside>
+    <article class="doc">
+      <div class="kind"><span class="badge">Technical report</span><span class="badge">2025</span><span class="badge">AIOps · LLM agents</span><span class="badge">~22 min read</span></div>
+      <h1>Agentic Incident Response with Change-Aware Anomaly Detection</h1>
+      <p class="byline">Rahul Kaura · AI/ML Engineering, Empirik AI (formerly Manifest)</p>
+      <div class="abstract"><h2>Abstract</h2><p>Many production incidents begin with a change: a deployment, a permission update, a configuration edit. The evidence is spread across Kubernetes events, application performance metrics, infrastructure monitors and logs, and each tool alerts on its own. Recent work shows that large language models can recommend root causes and mitigations for cloud incidents, but also that tool-using agents hallucinate, loop on complex cases, and raise false positives when nothing is wrong. We describe an autonomous incident-response agent, built with LangGraph, LangChain, the Model Context Protocol and the OpenAI API, that is designed around those failure modes. Unsupervised detection with Isolation Forest and rolling-baseline thresholds runs on log telemetry; a sliding-window correlator requires agreement across independent signal sources before confidence rises; and the agent itself is an explicit state machine in which the model gathers evidence and explains, while deterministic rules decide whether any production change is made. Automated rollback is limited to high-risk actions with a recoverable prior state. We formalize the detection and correlation steps, describe the agent's states and tool scopes, and give an evaluation method based on historical replay and fault injection.</p></div>
+
+      <h2 id="a-intro">1. Introduction</h2>
+      <p>Alerting tools are good at saying that something looks wrong and poor at saying why. They are worse at connecting a symptom in one tool to its cause in another. An on-call engineer ends up doing that correlation by hand: a latency spike in APM, a restart loop in Kubernetes events, a permission change logged an hour earlier. Each tool's alert is individually noisy; together they are often decisive.</p>
+      <p>Large language models are a natural fit for the "explain why" step. They can read heterogeneous telemetry, relate it to past incidents and write a summary an engineer can act on. They are a poor fit, on their own, for the "decide what to change in production" step. The system described here separates those two jobs explicitly.</p>
+      <p>This report contributes:</p>
+      <ul>
+        <li>A formulation of change-aware detection that combines Isolation Forest scores with rolling-baseline thresholds over windowed telemetry (Section 4).</li>
+        <li>A cross-source correlation rule that raises confidence only when independent signals agree in time (Section 5).</li>
+        <li>An agent architecture that confines the model to evidence gathering and explanation, with scoped tools and rule-based decisions, motivated by failure modes reported in prior agent studies (Section 6).</li>
+        <li>A conservative rollback policy with explicit preconditions and an audit record (Section 7).</li>
+        <li>An evaluation method combining historical replay, shadow mode and fault injection (Section 9).</li>
+      </ul>
+
+      <h2 id="a-related">2. Related work</h2>
+      <h3>2.1 Unsupervised anomaly detection</h3>
+      <p>Isolation Forest detects anomalies by isolating points with random axis-parallel splits; anomalous points are isolated in fewer splits, which gives a fast, label-free score that scales to high-dimensional data <a class="cite" href="#a-r1" data-jump>[1]</a>. Extended Isolation Forest replaces axis-parallel splits with random hyperplanes to remove artifacts that the original method produces along feature axes <a class="cite" href="#a-r2" data-jump>[2]</a>. Pang et al. survey deep anomaly detection and highlight the scarcity of labeled anomalies and the cost of false positives as central problems <a class="cite" href="#a-r3" data-jump>[3]</a>. Both apply directly to production incidents, where labels are rare and alert fatigue is the main operational cost.</p>
+      <h3>2.2 LLMs for incident management</h3>
+      <p>Zhang et al. survey AIOps for failure management in the era of LLMs, organizing work by task (detection, localization, root cause analysis and mitigation) and by data source <a class="cite" href="#a-r4" data-jump>[4]</a>. Ahmed et al. study about 44,000 incidents across roughly 1,800 Microsoft cloud services and find that fine-tuned GPT-3.x models produce root-cause and mitigation recommendations that incident owners rate higher than smaller baselines; they also find that automatic text metrics correlate poorly with those human judgments <a class="cite" href="#a-r5" data-jump>[5]</a>. RCACopilot pairs engineer-written incident handlers, which collect diagnostic data automatically for each alert type, with an LLM that predicts a root-cause category using retrieved past incidents as demonstrations; it reports a micro-F1 of 0.766 on 653 incidents <a class="cite" href="#a-r6" data-jump>[6]</a>.</p>
+      <h3>2.3 Tool-using agents for operations</h3>
+      <p>ReAct interleaves reasoning traces with tool calls so a model can gather information before answering <a class="cite" href="#a-r9" data-jump>[9]</a>. Roy et al. apply a ReAct agent to root cause analysis on 500 sampled incidents. It hallucinates root causes far less than retrieval and chain-of-thought baselines but is slightly less accurate overall, and in a case study it often hits its iteration limit on complex incidents <a class="cite" href="#a-r7" data-jump>[7]</a>. AIOpsLab provides an environment that deploys microservices, injects faults, generates load and exposes an agent-cloud interface across 48 problems; the authors find agents struggle most with root cause analysis and mitigation, waste steps on redundant actions, mishandle verbose telemetry, and frequently report faults that are not there <a class="cite" href="#a-r8" data-jump>[8]</a>.</p>
+      <h3>2.4 What this work takes from them</h3>
+      <p>Three design choices follow directly from this literature. From <a class="cite" href="#a-r6" data-jump>[6]</a>: collect diagnostics with deterministic, per-alert procedures, and let the model reason over the result rather than decide what to collect from scratch. From <a class="cite" href="#a-r7" data-jump>[7]</a> and <a class="cite" href="#a-r8" data-jump>[8]</a>: bound the agent's steps, keep telemetry summarized before it reaches the model, and do not let a model's belief that a fault exists be sufficient to change production. From <a class="cite" href="#a-r3" data-jump>[3]</a>: treat false positives as the primary cost, which is why confidence requires multi-source agreement.</p>
+
+      <h2 id="a-signals">3. Signals and problem setting</h2>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Source</th><th>What it contributes</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Kubernetes events</td><td>Deployments, scaling, restarts, scheduling and image pull failures</td><td>Record of what changed in the cluster</td></tr>
+          <tr><td>Datadog metrics and APM</td><td>Latency, error rate and throughput per service and endpoint</td><td>Whether users are affected</td></tr>
+          <tr><td>LogicMonitor</td><td>Host, network and infrastructure health below the cluster</td><td>Rules infrastructure in or out</td></tr>
+          <tr><td>VictoriaLogs</td><td>High-volume application and audit log telemetry</td><td>Primary input to anomaly detection</td></tr>
+          <tr><td>Change observability platform</td><td>Structural changes to Kubernetes, IAM, databases and networking</td><td>Candidate causes, with timestamps and actors</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>The task is: given these streams, (a) flag time windows in which the system's state changed abnormally or without authorization, (b) attach the most likely causal change and supporting evidence, and (c) either remediate, escalate to a human, or close the alert as noise.</p>
+
+      <h2 id="a-detect">4. Detection</h2>
+      <h3>4.1 Windowing and features</h3>
+      <p>Each stream is cut into windows of length &Delta; with stride <i>s</i> &lt; &Delta;, so a burst near a boundary is seen whole in at least one window. For window <i>t</i>, a feature vector <b>x</b><sub><i>t</i></sub> is built from log and event data: counts per event type, error-to-total ratios, the rate of change-related events, the number of distinct resources and principals touched, and the share of actions by principals not seen in the trailing baseline.</p>
+      <h3>4.2 Isolation Forest score</h3>
+      <p>Isolation Forest builds an ensemble of random isolation trees on sub-samples of size <i>&psi;</i>. For a point <b>x</b>, let <i>h</i>(<b>x</b>) be its path length in a tree and E[<i>h</i>(<b>x</b>)] its mean across trees. The anomaly score is <a class="cite" href="#a-r1" data-jump>[1]</a></p>
+      <p class="eq"><i>s</i>(<b>x</b>, <i>&psi;</i>) = 2<sup>&minus;E[<i>h</i>(<b>x</b>)] / <i>c</i>(<i>&psi;</i>)</sup>, &nbsp;&nbsp; <i>c</i>(<i>n</i>) = 2<i>H</i>(<i>n</i>&minus;1) &minus; 2(<i>n</i>&minus;1)/<i>n</i></p>
+      <p>where <i>H</i>(<i>i</i>) is the harmonic number, approximately ln(<i>i</i>) + 0.5772. Scores near 1 indicate points that isolate quickly. The forest is refit on a trailing baseline so "normal" tracks gradual growth in traffic and fleet size.</p>
+      <h3>4.3 Rolling-baseline thresholds</h3>
+      <p>Alongside the forest, key metrics are compared with their own recent history. Written as a robust z-score over a trailing window,</p>
+      <p class="eq"><i>z</i><sub><i>t</i></sub> = (<i>m</i><sub><i>t</i></sub> &minus; median<sub>B</sub>) / (1.4826 &middot; MAD<sub>B</sub>)</p>
+      <p>where <i>B</i> is the baseline window and MAD is the median absolute deviation. Median and MAD are used instead of mean and standard deviation because a single past incident in the baseline would otherwise inflate the threshold and hide the next one.</p>
+      <h3>4.4 Why two detectors</h3>
+      <p>The forest is good at multivariate novelty, such as an unusual combination of principal, resource and action, but it gives no reason. Thresholds are interpretable but see one metric at a time. They fail differently, so a window that trips both is stronger evidence than one that trips either, and the threshold that fired gives the agent a concrete starting point.</p>
+
+      <h2 id="a-corr">5. Cross-source correlation</h2>
+      <figure>
+        <div class="figscroll">
+        <svg viewBox="0 0 760 150" role="img" aria-label="Sliding window correlation across signal sources">
+          <text class="sub" x="10" y="30">k8s events</text><text class="sub" x="10" y="62">APM metrics</text><text class="sub" x="10" y="94">infra monitor</text><text class="sub" x="10" y="126">log anomaly</text>
+          <path class="arr" d="M110 26H750M110 58H750M110 90H750M110 122H750" style="stroke:var(--line)"/>
+          <rect class="hl" x="390" y="10" width="170" height="128" rx="6" style="fill-opacity:.55"/>
+          <circle cx="420" cy="26" r="6" style="fill:var(--accent)"/><circle cx="470" cy="58" r="6" style="fill:var(--accent)"/><circle cx="500" cy="122" r="6" style="fill:var(--accent)"/>
+          <circle cx="200" cy="58" r="5" style="fill:var(--muted)"/><circle cx="640" cy="94" r="5" style="fill:var(--muted)"/><circle cx="290" cy="122" r="5" style="fill:var(--muted)"/>
+          <text class="sub" x="475" y="148" text-anchor="middle">window: 3 sources agree → high confidence</text>
+        </svg>
+        </div>
+        <figcaption>Figure 1. Isolated signals (grey) stay below the action threshold. When a change event, a metric deviation and a log anomaly fall in the same window on related resources (blue), confidence rises.</figcaption>
+      </figure>
+      <p>Let <i>S</i> be the set of signal sources and <i>a</i><sub><i>i</i>,<i>t</i></sub> &isin; [0, 1] the normalized anomaly strength of source <i>i</i> in window <i>t</i>, restricted to resources related to a candidate change (the same workload, its dependencies, or the same principal). Confidence is</p>
+      <p class="eq">conf<sub><i>t</i></sub> = &sum;<sub><i>i</i>&isin;<i>S</i></sub> <i>w</i><sub><i>i</i></sub> &middot; <i>a</i><sub><i>i</i>,<i>t</i></sub>, &nbsp;&nbsp; with action allowed only if conf<sub><i>t</i></sub> &ge; <i>&theta;</i> and |{<i>i</i> : <i>a</i><sub><i>i</i>,<i>t</i></sub> &gt; <i>&epsilon;</i>}| &ge; 2</p>
+      <p>The second condition is what reduces noise. A single source, however strong, can raise an alert for a human but can never on its own trigger an automated action. Weights <i>w</i><sub><i>i</i></sub> reflect how often each source has been right in past incidents and are kept simple and inspectable.</p>
+
+      <h2 id="a-agent">6. Agent architecture</h2>
+      <p>The agent is a LangGraph state graph, not an open-ended loop. Every state, transition and tool call is explicit and logged, and the graph has a hard step budget, which addresses the looping behavior reported in <a class="cite" href="#a-r7" data-jump>[7]</a>. Within states, the model follows a reason-then-act pattern <a class="cite" href="#a-r9" data-jump>[9]</a>.</p>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>State</th><th>Input</th><th>Model's job</th><th>Tools (via MCP)</th><th>Exit</th></tr></thead>
+        <tbody>
+          <tr><td>Triage</td><td>Correlated window, confidence</td><td>Summarize what fired and where</td><td>None</td><td>Investigate or close</td></tr>
+          <tr><td>Gather</td><td>Triage summary</td><td>Choose which evidence to pull next</td><td>Read-only: recent changes, k8s events, metric queries, log search</td><td>Enough evidence or step budget reached</td></tr>
+          <tr><td>Hypothesize</td><td>Collected evidence</td><td>Name the most likely causal change and cite the events it relies on</td><td>None</td><td>Hypothesis with citations</td></tr>
+          <tr><td>Decide</td><td>Hypothesis, confidence, change metadata</td><td>None (deterministic rules)</td><td>None</td><td>Act, escalate or close</td></tr>
+          <tr><td>Act</td><td>Approved action</td><td>None</td><td>Write-scoped: rollback of the named resource only</td><td>Verified or escalated</td></tr>
+          <tr><td>Escalate</td><td>Everything above</td><td>Write the on-call summary</td><td>Paging and ticketing</td><td>Done</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p><b>Tool scoping.</b> Tools are exposed through the Model Context Protocol with read-only scopes by default. The single write-capable tool exists only in the Act state, and only for the resource named in the approved decision. The model cannot reach it from Gather or Hypothesize.</p>
+      <p><b>Summarized telemetry.</b> Raw logs and metric series are summarized before they reach the model (top-k error signatures, deltas against baseline, the change list for the window). AIOpsLab reports that agents mishandle verbose telemetry <a class="cite" href="#a-r8" data-jump>[8]</a>; summarization keeps context short and reduces that failure.</p>
+      <p><b>Grounded hypotheses.</b> A hypothesis must cite specific events by identifier. If it cites none, or cites events that do not exist in the gathered evidence, it is rejected and the agent escalates. This targets the hallucinated root causes measured in <a class="cite" href="#a-r7" data-jump>[7]</a>.</p>
+
+      <h2 id="a-rollback">7. Rollback policy</h2>
+      <p>The model explains; code decides. Automated rollback is permitted only when every precondition holds:</p>
+<pre>may_rollback(change, conf, sources):
+    return  change.risk_class in HIGH_RISK           # critical deployments, privileged IAM grants
+        and change.prior_state.is_restorable          # exact previous spec or policy is stored
+        and conf &gt;= THETA_ACTION
+        and count(s for s in sources if s.strength &gt; EPS) &gt;= 2
+        and change.age &lt;= MAX_AGE                    # recent enough that rollback is safe
+        and not change.has_dependent_changes_after    # nothing built on top of it since</pre>
+      <p>Every rollback writes an audit record containing the triggering window, the confidence and contributing sources, the hypothesis with its cited events, the exact prior state restored, and post-rollback verification results. If verification fails, the agent does not try again; it escalates with the record attached. Anything that fails a precondition goes to a person. The aim is to remove obvious bad changes quickly, not to replace human judgment on ambiguous ones.</p>
+
+      <h2 id="a-change">8. Change observability</h2>
+      <p>Detection is much more useful when the candidate causes are already known. The change observability platform records structural changes across Kubernetes resources, IAM policies and bindings, database schemas and permissions, and network configuration, each with a timestamp, actor and before/after state. It serves three roles in this system: it supplies the candidate change set for correlation in Section 5, it stores the prior state that makes rollback possible in Section 7, and it provides the "principal not seen in baseline" feature in Section 4.1, which is the main signal for unauthorized changes.</p>
+
+      <h2 id="a-eval">9. Evaluation method</h2>
+      <p>We evaluate in three stages, from least to most realistic.</p>
+      <ol>
+        <li><b>Historical replay.</b> Past telemetry is replayed through detection and correlation with the Act state disabled. Every window the system would have flagged is compared with the incident record. This measures detection precision and recall and the alert reduction relative to raw per-tool alerts.</li>
+        <li><b>Shadow mode.</b> The full agent runs on live data and writes its decisions to a log, but never acts. Engineers review its proposed actions against what they actually did. This measures decision quality without production risk.</li>
+        <li><b>Fault injection.</b> In a staging environment, known faults are injected (a bad deployment, an over-broad IAM grant, a network policy that blocks a dependency), in the spirit of AIOpsLab <a class="cite" href="#a-r8" data-jump>[8]</a>. Ground truth is exact, so detection, localization and rollback correctness can be scored directly, including the no-fault case to measure false positives.</li>
+      </ol>
+      <div class="tscroll">
+      <table class="t">
+        <thead><tr><th>Metric</th><th>Definition</th></tr></thead>
+        <tbody>
+          <tr><td>Alert reduction</td><td>1 &minus; (agent escalations / raw per-tool alerts) over the same period</td></tr>
+          <tr><td>Detection precision / recall</td><td>Against incident records (replay) or injected faults (staging)</td></tr>
+          <tr><td>Time to detect</td><td>From the causal change to the first flagged window</td></tr>
+          <tr><td>Action precision</td><td>Share of automated rollbacks later judged correct by the owning team</td></tr>
+          <tr><td>False rollback rate</td><td>Rollbacks on no-fault or misattributed windows; the most important number to keep at zero</td></tr>
+          <tr><td>Grounding rate</td><td>Share of hypotheses whose cited events exist and support the conclusion</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="note">Measured values are omitted. Cluster names, services and incident data in this report are generalized.</p>
+
+      <h2 id="a-limits">10. Limitations and future work</h2>
+      <p><b>Baseline drift.</b> Fleet growth, seasonal traffic and new services shift what normal looks like. Refitting on a trailing window helps but lags abrupt shifts; per-service baselines and change-point detection are natural next steps.</p>
+      <p><b>Axis artifacts.</b> Standard Isolation Forest can produce score artifacts along feature axes; Extended Isolation Forest <a class="cite" href="#a-r2" data-jump>[2]</a> is a direct replacement worth evaluating on the same windows.</p>
+      <p><b>Model nondeterminism.</b> Two runs on the same evidence can produce different hypotheses. Keeping decisions in code bounds the impact, but hypothesis stability should be measured and reported alongside accuracy.</p>
+      <p><b>Learning from history.</b> RCACopilot shows the value of retrieving similar past incidents as demonstrations <a class="cite" href="#a-r6" data-jump>[6]</a>. Indexing past incidents together with the change observability record would let the agent condition on how similar changes failed before, and let risk classes be weighted by resource type instead of set by hand.</p>
+      <p><b>Regression suite.</b> Every resolved incident can become a replay test, so changes to prompts, tools or thresholds are checked against the incidents the system has already seen.</p>
+
+      <h2 id="a-refs">References</h2>
+      <ol class="refs">
+        <li id="a-r1">F. T. Liu, K. M. Ting, Z.-H. Zhou. "Isolation Forest." <i>IEEE International Conference on Data Mining (ICDM)</i>, 2008.</li>
+        <li id="a-r2">S. Hariri, M. Carrasco Kind, R. J. Brunner. "Extended Isolation Forest." 2018. <a href="https://arxiv.org/abs/1811.02141" target="_blank" rel="noopener">arXiv:1811.02141</a></li>
+        <li id="a-r3">G. Pang, C. Shen, L. Cao, A. van den Hengel. "Deep Learning for Anomaly Detection: A Review." <i>ACM Computing Surveys</i>, 2021. <a href="https://arxiv.org/abs/2007.02500" target="_blank" rel="noopener">arXiv:2007.02500</a></li>
+        <li id="a-r4">L. Zhang, T. Jia, M. Jia, Y. Wu et al. "A Survey of AIOps for Failure Management in the Era of Large Language Models." 2024. <a href="https://arxiv.org/abs/2406.11213" target="_blank" rel="noopener">arXiv:2406.11213</a></li>
+        <li id="a-r5">T. Ahmed, S. Ghosh, C. Bansal, T. Zimmermann, X. Zhang, S. Rajmohan. "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models." <i>ICSE</i>, 2023. <a href="https://arxiv.org/abs/2301.03797" target="_blank" rel="noopener">arXiv:2301.03797</a></li>
+        <li id="a-r6">Y. Chen, H. Xie, M. Ma, Y. Kang et al. "Automatic Root Cause Analysis via Large Language Models for Cloud Incidents." <i>EuroSys</i>, 2024. <a href="https://arxiv.org/abs/2305.15778" target="_blank" rel="noopener">arXiv:2305.15778</a></li>
+        <li id="a-r7">D. Roy, X. Zhang, R. Bhave, C. Bansal et al. "Exploring LLM-based Agents for Root Cause Analysis." 2024. <a href="https://arxiv.org/abs/2403.04123" target="_blank" rel="noopener">arXiv:2403.04123</a></li>
+        <li id="a-r8">Y. Chen, M. Shetty, G. Somashekar, M. Ma, Y. Simmhan et al. "AIOpsLab: A Holistic Framework to Evaluate AI Agents for Enabling Autonomous Clouds." 2025. <a href="https://arxiv.org/abs/2501.06706" target="_blank" rel="noopener">arXiv:2501.06706</a></li>
+        <li id="a-r9">S. Yao et al. "ReAct: Synergizing Reasoning and Acting in Language Models." <i>ICLR</i>, 2023. <a href="https://arxiv.org/abs/2210.03629" target="_blank" rel="noopener">arXiv:2210.03629</a></li>
+      </ol>
+      <div class="next"><a class="textlink" href="#paper-ingestion" data-go="paper-ingestion">← Structure-preserving ingestion</a><a class="textlink" href="#research" data-go="research">All research →</a></div>
+    </article>
+  </div>
+</div>
+
+<!-- ================= BUILDS ================= -->
+<div class="view" id="v-builds" data-view="builds" hidden>
+  <div class="wrap">
+    <section class="block">
+      <div class="sechead"><div><div class="eyebrow">Open source</div><h2>Field tools</h2></div><p>Tools I built for the problems I keep meeting in customer environments. Both are tested, documented and run with no external services.</p></div>
+      <div class="deploys">
+        <article class="deploy">
+          <aside>
+            <div class="client">Open source · 2026</div>
+            <h3>driftguard</h3>
+            <p class="meta">Pre-deploy change risk for Kubernetes<br>Python · 14 rules · 25 tests</p>
+            <div class="chips"><span class="chip">Kubernetes</span><span class="chip">Graph analysis</span><span class="chip">SARIF</span><span class="chip">CI/CD</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Most incidents start with a change, and a manifest diff hides what a change does to everything that depends on it.</p></div>
+            <div><h4>Built</h4><p>Diffs two manifest sets or git refs, builds a dependency graph (workloads, config, secrets, Services, Ingress, RBAC, NetworkPolicy, External Secrets), computes blast radius, runs security and availability rules, and returns approve, review or block.</p></div>
+            <div class="result"><h4>Result</h4><p>On the bundled AI inference example it catches a Service selector typo that drops all retriever traffic, a config change that never reaches running pods, and a debug account bound to cluster-admin.</p></div>
+            <div class="foot"><a class="textlink" href="https://github.com/Rahul-Kaura/driftguard" target="_blank" rel="noopener">github.com/Rahul-Kaura/driftguard ↗</a></div>
+          </div>
+        </article>
+        <article class="deploy">
+          <aside>
+            <div class="client">Open source · 2026</div>
+            <h3>fieldrag</h3>
+            <p class="meta">Offline document retrieval with citations<br>Python stdlib only · 19 tests</p>
+            <div class="chips"><span class="chip">RAG</span><span class="chip">Document AI</span><span class="chip">Air-gapped</span><span class="chip">BM25</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Policies and runbooks lose their meaning when chunked by size: clauses lose their section, table values lose their headers, exceptions lose their footnotes. And many environments cannot send documents to an outside API.</p></div>
+            <div><h4>Built</h4><p>Parses Word, HTML, Markdown and text into a typed document tree, resolves merged table headers, summarizes along the document hierarchy, retrieves with BM25 and answers at cell level with section citations. No network, no model downloads.</p></div>
+            <div class="result"><h4>Result</h4><p>On its labeled sample set, structure-aware chunks find the right passage first 96% of the time against 77% for fixed windows, while sending 29% less text to the model.</p></div>
+            <div class="foot"><a class="textlink" href="https://github.com/Rahul-Kaura/fieldrag" target="_blank" rel="noopener">github.com/Rahul-Kaura/fieldrag ↗</a><a class="textlink" href="#paper-ingestion" data-go="paper-ingestion">Related technical report →</a></div>
+          </div>
+        </article>
+        <article class="deploy">
+          <aside>
+            <div class="client">Infra tooling</div>
+            <h3>Infrastructure compliance scanner</h3>
+            <p class="meta">Config compliance in CI</p>
+            <div class="chips"><span class="chip">TypeScript</span><span class="chip">Python</span><span class="chip">CI/CD</span><span class="chip">LLMs</span></div>
+          </aside>
+          <div class="brief">
+            <div><h4>Problem</h4><p>Compliance checks on infrastructure config usually happen after deployment, when fixing them is slow and expensive.</p></div>
+            <div><h4>Built</h4><p>A TypeScript scanner with a Python rule engine and a CLI that runs in CI, plus GPT-4 assisted drafting of compliant configurations.</p></div>
+            <div class="result"><h4>Result</h4><p>Moves compliance feedback into the pull request, with a suggested fix next to each violation.</p></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= PROFILE ================= -->
+<div class="view" id="v-profile" data-view="profile" hidden>
+  <div class="wrap">
+    <section class="block">
+      <div class="sechead"><div><div class="eyebrow">Experience</div><h2>Where I've worked</h2></div></div>
+      <div class="timeline">
+        <div class="role"><div class="when">Jun 2026 – Present</div><div><h3>Forward Deployed Engineer <small>· Uniphore</small></h3><p>Document intelligence, LLM/SLM inference, model routing, agent orchestration and Kubernetes infrastructure on the Business AI Cloud.</p></div></div>
+        <div class="role"><div class="when">Jun 2025 – Sep 2025</div><div><h3>AI/ML Engineering Intern <small>· Empirik AI (formerly Manifest)</small></h3><p>Hands-on engineer on the core platform of a Sequoia-incubated AI infrastructure company. Led development of the observability dashboard for logs, changes and system state, and built the autonomous incident-response agent, anomaly detection and automated rollback across production clusters.</p><p class="meta" style="margin-top:8px">Coverage: <a class="textlink" href="https://sequoiacap.com/article/partnering-with-empirik-building-the-autonomous-infrastructure-engineer" target="_blank" rel="noopener">Sequoia Capital ↗</a> · <a class="textlink" href="https://pulse2.com/empirik-ai-raises-21-million-seed-round-to-build-autonomous-infrastructure-engineer/" target="_blank" rel="noopener">Pulse 2.0 ↗</a></p></div></div>
+        <div class="role"><div class="when">Sep 2024 – Jun 2025</div><div><h3>Undergraduate Research Assistant <small>· SCU Mathematics</small></h3><p>NLP and regression modeling on student survey and interview data.</p></div></div>
+        <div class="role"><div class="when">Sep 2024 – Jun 2025</div><div><h3>Ciocca Center Innovation Fellow <small>· Santa Clara University</small></h3><p>Selected at a 20% acceptance rate. Prototyped and launched a campus platform with Innovation and CS faculty.</p></div></div>
+      </div>
+    </section>
+    <section class="block">
+      <div class="sechead"><div><div class="eyebrow">Education</div><h2>Santa Clara University</h2></div></div>
+      <div class="edu">
+        <div><h3>B.S. Computer Science &amp; Engineering</h3><p>Santa Clara, CA</p></div>
+        <div class="courses">
+          <span class="course">Distributed Systems</span><span class="course">Operating Systems</span><span class="course">Computer Networks</span><span class="course">Machine Learning</span><span class="course">Deep Learning</span><span class="course">NLP</span><span class="course">Reinforcement Learning</span><span class="course">Data Structures &amp; Algorithms</span><span class="course">Compilers</span><span class="course">Programming Languages</span><span class="course">Computer Architecture</span>
+        </div>
+      </div>
+    </section>
+    <section class="block">
+      <div class="sechead"><div><div class="eyebrow">Stack</div><h2>What I deploy with</h2></div></div>
+      <div class="stack">
+        <div class="layer"><h3>LLM &amp; agents</h3><p>LangGraph, LangChain, MCP, OpenAI API, RAG, structured generation, model routing</p></div>
+        <div class="layer"><h3>Inference &amp; serving</h3><p>vLLM, SGLang, TensorRT-LLM, Hugging Face</p></div>
+        <div class="layer"><h3>Infrastructure</h3><p>Kubernetes, Docker, External Secrets Operator, REST APIs, distributed systems</p></div>
+        <div class="layer"><h3>Observability</h3><p>Datadog, LogicMonitor, VictoriaLogs, anomaly detection</p></div>
+        <div class="layer"><h3>ML</h3><p>PyTorch, TensorFlow, scikit-learn, Statsmodels, NLP, reinforcement learning</p></div>
+        <div class="layer"><h3>Languages</h3><p>Python, TypeScript, C/C++, Java, SQL, Kotlin</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= CONTACT (all views) ================= -->
+<section class="block" id="contact">
+  <div class="wrap contact">
+    <div>
+      <div class="eyebrow">Contact</div>
+      <h2>Let's deploy something</h2>
+      <p style="margin:16px 0 0;color:var(--muted);font-size:18px;max-width:30em">Open to forward deployed and AI engineering roles. Email is the fastest way to reach me.</p>
+    </div>
+    <div class="lines">
+      <div class="line"><span id="email">rkaura@scu.edu</span><button class="copy" type="button" data-copy="email">Copy</button></div>
+      <div class="line"><span id="phone">408-506-1423</span><button class="copy" type="button" data-copy="phone">Copy</button></div>
+      <a class="line" href="https://linkedin.com/in/rahulkaura" target="_blank" rel="noopener"><span>linkedin.com/in/rahulkaura</span><small>Open ↗</small></a>
+      <a class="line" href="https://github.com/Rahul-Kaura" target="_blank" rel="noopener"><span>github.com/Rahul-Kaura</span><small>Open ↗</small></a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap"><span>© 2026 Rahul Kaura</span><span>Santa Clara, CA</span></div></footer>
+
+<script>
+(function(){
+  var papers=[
+    {id:"paper-incident",org:"Empirik AI",year:"2025",title:"Agentic Incident Response with Change-Aware Anomaly Detection",sum:"A LangGraph agent that detects abnormal state changes with Isolation Forest, correlates signals across Kubernetes, Datadog and LogicMonitor, and gates automated rollback."},
+    {id:"paper-ingestion",org:"Uniphore",year:"2026",title:"Structure-Preserving Document Ingestion for Enterprise RAG",sum:"Parsing heterogeneous files into a document tree, schema-validated summaries and path-aware chunks, plus a benchmark of graph vs. transformer parsers."},
+    {id:"paper-secrets",org:"Uniphore",year:"2026",title:"Declarative Secret Delivery for AI Microservices on Kubernetes",sum:"Using External Secrets Operator to reconcile encrypted credentials into AI workloads, with zero-downtime rotation and per-service failure isolation."}
+  ];
+  function card(p){return '<a class="paper" href="#'+p.id+'" data-go="'+p.id+'"><div class="meta"><span>'+p.org+' · '+p.year+'</span><span>Technical report</span></div><h3>'+p.title+'</h3><p>'+p.sum+'</p><span class="read">Read report →</span></a>'}
+  ["paper-cards-overview","paper-cards-research"].forEach(function(id){document.getElementById(id).innerHTML=papers.map(card).join("")});
+
+  /* system map */
+  var nodes={
+    sources:{t:"Business files & telemetry",who:"Where everything starts",p:"Enterprise PDFs, policies and spreadsheets on one side; cluster events, metrics and logs on the other. Both are messy, and both decide whether the AI downstream can be trusted.",ul:["Mapped which file types and layouts break standard parsers","Mapped which telemetry sources carry real change signals"],links:[]},
+    ingest:{t:"Parsing & structure",who:"Uniphore · 2026",p:"Turning heterogeneous business files into a document tree that keeps headings, nested tables, merged cells and footnotes intact.",ul:["Transformer-based outline extraction in production","Benchmarked graph vs. transformer parsers on fidelity, latency and cost"],links:[["paper-ingestion","Technical report"],["deployments","Deployment brief"]]},
+    knowledge:{t:"Outlines, schema & RAG",who:"Uniphore · 2026",p:"Abstractive summaries per section, validated against a JSON schema, then indexed with each chunk's outline path so retrieval returns context, not fragments.",ul:["Schema-constrained outputs with validate-and-retry","Removed manual data prep for compliance search"],links:[["paper-ingestion","Technical report"]]},
+    inference:{t:"LLM/SLM inference & routing",who:"Uniphore · 2026",p:"Serving large and small models side by side and routing each request to the one that fits its quality, latency and cost needs.",ul:["Inference and model routing on the Business AI Cloud","Structured outputs that downstream agents can rely on"],links:[]},
+    agents:{t:"Orchestration & tools",who:"Uniphore 2026 · Empirik AI 2025",p:"Agents that plan, call tools and act. The useful ones are explicit state machines with code-level guardrails, not free-running loops.",ul:["LangGraph incident-response agent with MCP tools at Empirik AI","Agent orchestration on Uniphore's Agentic Layer"],links:[["paper-incident","Technical report"]]},
+    secrets:{t:"Secrets & identity",who:"Uniphore · 2026",p:"Every hop in the request path needs a credential. Declarative delivery keeps them in sync, rotatable and scoped.",ul:["External Secrets Operator architecture for AI microservices","Zero-downtime rotation and per-service failure isolation"],links:[["paper-secrets","Technical report"],["deployments","Deployment brief"]]},
+    observe:{t:"Observability & rollback",who:"Empirik AI · 2025",p:"Knowing what changed, whether it hurt anything, and undoing it safely when it did.",ul:["Led development of the dashboard for logs, changes and system state","Change tracking across Kubernetes, IAM, databases and networking","Isolation Forest detection and automated rollback of high-risk actions"],links:[["paper-incident","Technical report"],["deployments","Deployment brief"]]}
+  };
+  var detail=document.getElementById("detail");
+  function showNode(k){
+    var n=nodes[k];
+    document.querySelectorAll(".node").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.node===k?"true":"false")});
+    detail.innerHTML='<div class="who">'+n.who+'</div><h3>'+n.t+'</h3><p>'+n.p+'</p><ul>'+n.ul.map(function(x){return"<li>"+x+"</li>"}).join("")+'</ul>'+(n.links.length?'<div class="links">'+n.links.map(function(l){return'<a class="textlink" href="#'+l[0]+'" data-go="'+l[0]+'">'+l[1]+' →</a>'}).join("")+'</div>':"");
+  }
+  document.querySelectorAll(".node").forEach(function(b){b.addEventListener("click",function(){showNode(b.dataset.node)})});
+  showNode("ingest");
+
+  /* views */
+  var views={};document.querySelectorAll("[data-view]").forEach(function(v){views[v.dataset.view]=v});
+  function go(name,push){
+    if(!views[name])name="overview";
+    Object.keys(views).forEach(function(k){views[k].hidden=(k!==name)});
+    var tabName=name.indexOf("paper-")===0?"research":name;
+    document.querySelectorAll(".tab").forEach(function(t){t.toggleAttribute("aria-current",false);if(t.dataset.go===tabName)t.setAttribute("aria-current","page")});
+    if(push){try{history.replaceState(null,"","#"+name)}catch(e){}}
+    window.scrollTo(0,0);
+  }
+  document.addEventListener("click",function(e){
+    var a=e.target.closest("[data-go]");
+    if(a){e.preventDefault();go(a.dataset.go,true);return}
+    var j=e.target.closest("[data-jump]");
+    if(j){e.preventDefault();var t=document.querySelector(j.getAttribute("href"));if(t)t.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
+  });
+  window.addEventListener("hashchange",function(){go(location.hash.slice(1),false)});
+  go((location.hash||"#overview").slice(1),false);
+
+  /* filters */
+  document.querySelectorAll(".filter").forEach(function(f){f.addEventListener("click",function(){
+    document.querySelectorAll(".filter").forEach(function(x){x.setAttribute("aria-pressed",x===f?"true":"false")});
+    var k=f.dataset.filter;
+    document.querySelectorAll(".deploy").forEach(function(d){d.hidden=!(k==="all"||d.dataset.tags.split(" ").indexOf(k)>-1)});
+  })});
+
+  /* copy */
+  document.querySelectorAll("button.copy").forEach(function(b){b.addEventListener("click",function(){
+    var el=document.getElementById(b.dataset.copy);
+    function done(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},1600)}
+    function fallback(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected"}
+    try{navigator.clipboard.writeText(el.textContent).then(done,fallback)}catch(e){fallback()}
+  })});
+})();
+</script>
+</body>
+</html>

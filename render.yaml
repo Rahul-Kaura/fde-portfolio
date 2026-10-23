@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: rahul-kaura-portfolio
+    runtime: static
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
